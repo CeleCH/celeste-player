@@ -53,14 +53,18 @@ export const ytDlpService = {
     // Specify Node.js as the JavaScript runtime for signature challenge solving
     args.push('--js-runtimes', 'node');
 
-    // Bypass YouTube 429 rate limits by skipping the initial webpage fetch and forcing iOS/Android mobile clients
-    // (which do not require web PO tokens and have different rate limit ceilings)
-    args.push('--extractor-args', 'youtube:skip=webpage;player_client=ios,android');
+    // Ignore format extraction errors for restricted formats
+    args.push('--ignore-no-formats');
+
+    // Bypass YouTube 429 rate limits and PO Token issues:
+    // - skip=hls,dash: Skip manifest downloading to reduce request count
+    // - player_client=android,web: Try mobile API first, fallback to web (which supports cookies)
+    // - player_skip=configs,js: Avoid loading extra player configurations
+    // - formats=missing_pot: Don't fail if PO Token is missing for some formats
+    args.push('--extractor-args', 'youtube:skip=hls,dash;player_client=android,web;player_skip=configs,js;formats=missing_pot');
 
     // Secure Cookies Integration:
     // Check both Render's default secure mount path (/etc/secrets/cookies.txt) and the local directory
-    // NOTE: Commented out because iOS/Android clients do not support cookies and get skipped if cookies are passed.
-    /*
     const renderCookiesPath = '/etc/secrets/cookies.txt';
     const localCookiesPath = path.resolve(process.cwd(), 'cookies.txt');
     const tempCookiesPath = '/tmp/cookies.txt';
@@ -78,7 +82,6 @@ export const ytDlpService = {
     } else if (fs.existsSync(localCookiesPath)) {
       args.push('--cookies', localCookiesPath);
     }
-    */
 
     args.push(videoUrl);
 

@@ -1,5 +1,7 @@
 import { execFile } from 'child_process';
 import dotenv from 'dotenv';
+import fs from 'fs';
+import path from 'path';
 
 dotenv.config();
 
@@ -43,8 +45,20 @@ export const ytDlpService = {
     const args = [
       '-f', 'bestaudio[ext=m4a]/bestaudio/best', 
       '-g', // Get streaming URL directly
-      videoUrl
     ];
+
+    // Force IPv4 as datacenter IPv6 is more aggressively rate-limited
+    args.push('--force-ipv4');
+
+    // Secure Cookies Integration:
+    // If a cookies.txt file exists in the application root, pass it to yt-dlp.
+    // This allows authenticated requests which bypasses YouTube's HTTP 429 rate limiting on datacenter IPs.
+    const cookiesPath = path.resolve(process.cwd(), 'cookies.txt');
+    if (fs.existsSync(cookiesPath)) {
+      args.push('--cookies', cookiesPath);
+    }
+
+    args.push(videoUrl);
 
     return new Promise((resolve, reject) => {
       // Use execFile with explicit string arguments (no shell interpreter invoked, preventing commands injection)

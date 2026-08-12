@@ -53,9 +53,9 @@ export const ytDlpService = {
     // Specify Node.js as the JavaScript runtime for signature challenge solving
     args.push('--js-runtimes', 'node');
 
-    // Bypass YouTube 429 rate limits by forcing iOS/Android mobile clients
+    // Bypass YouTube 429 rate limits by skipping the initial webpage fetch and forcing iOS/Android mobile clients
     // (which do not require web PO tokens and have different rate limit ceilings)
-    args.push('--extractor-args', 'youtube:player_client=ios,android');
+    args.push('--extractor-args', 'youtube:skip=webpage;player_client=ios,android');
 
     // Secure Cookies Integration:
     // Check both Render's default secure mount path (/etc/secrets/cookies.txt) and the local directory

@@ -50,13 +50,25 @@ export const ytDlpService = {
     // Force IPv4 as datacenter IPv6 is more aggressively rate-limited
     args.push('--force-ipv4');
 
+    // Specify Node.js as the JavaScript runtime for signature challenge solving
+    args.push('--js-runtimes', 'node');
+
     // Secure Cookies Integration:
     // Check both Render's default secure mount path (/etc/secrets/cookies.txt) and the local directory
     const renderCookiesPath = '/etc/secrets/cookies.txt';
     const localCookiesPath = path.resolve(process.cwd(), 'cookies.txt');
+    const tempCookiesPath = '/tmp/cookies.txt';
 
     if (fs.existsSync(renderCookiesPath)) {
-      args.push('--cookies', renderCookiesPath);
+      try {
+        // Copy the read-only secrets file to a writable path (/tmp) because yt-dlp 
+        // attempts to write back/update session cookies during execution.
+        fs.copyFileSync(renderCookiesPath, tempCookiesPath);
+        args.push('--cookies', tempCookiesPath);
+      } catch (copyErr) {
+        console.error('Failed to copy cookies to temp path:', copyErr.message);
+        args.push('--cookies', renderCookiesPath); // fallback to read-only
+      }
     } else if (fs.existsSync(localCookiesPath)) {
       args.push('--cookies', localCookiesPath);
     }

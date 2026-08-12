@@ -110,7 +110,7 @@ export const getStreamUrl = async (req, res) => {
   } catch (error) {
     console.error(`Error in getStreamUrl controller (id: ${req.params.id}):`, error);
     res.status(500).json({ 
-      error: "No se pudo preparar la reproducción. Verifica que yt-dlp esté instalado en el servidor." 
+      error: `Error al preparar la reproducción: ${error.message}` 
     });
   }
 };

@@ -59,6 +59,8 @@ export const ytDlpService = {
 
     // Secure Cookies Integration:
     // Check both Render's default secure mount path (/etc/secrets/cookies.txt) and the local directory
+    // NOTE: Commented out because iOS/Android clients do not support cookies and get skipped if cookies are passed.
+    /*
     const renderCookiesPath = '/etc/secrets/cookies.txt';
     const localCookiesPath = path.resolve(process.cwd(), 'cookies.txt');
     const tempCookiesPath = '/tmp/cookies.txt';
@@ -76,6 +78,7 @@ export const ytDlpService = {
     } else if (fs.existsSync(localCookiesPath)) {
       args.push('--cookies', localCookiesPath);
     }
+    */
 
     args.push(videoUrl);
 

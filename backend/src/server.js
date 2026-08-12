@@ -19,10 +19,29 @@ app.use(helmet({
 
 // CORS Configuration
 app.use(cors({
-  origin: FRONTEND_URL,
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps or curl)
+    if (!origin) return callback(null, true);
+
+    const cleanOrigin = origin.trim();
+
+    // Allow localhost, local IP network, Vercel deployments, or the configured FRONTEND_URL
+    if (
+      cleanOrigin.startsWith("http://localhost:") ||
+      cleanOrigin.startsWith("http://127.0.0.1:") ||
+      cleanOrigin.endsWith(".vercel.app") ||
+      cleanOrigin === FRONTEND_URL
+    ) {
+      return callback(null, true);
+    }
+
+    console.warn(`Blocked by CORS: ${cleanOrigin}`);
+    callback(new Error("No permitido por CORS"));
+  },
   methods: ["GET", "POST", "DELETE", "OPTIONS"],
   credentials: true,
 }));
+
 
 // Rate Limiter to prevent abuse
 const limiter = rateLimit({

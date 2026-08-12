@@ -53,14 +53,11 @@ export const ytDlpService = {
     // Specify Node.js as the JavaScript runtime for signature challenge solving
     args.push('--js-runtimes', 'node');
 
-    // Ignore format extraction errors for restricted formats
-    args.push('--ignore-no-formats');
-
     // Bypass YouTube 429 rate limits and PO Token issues:
-    // - player_client=android,web: Try mobile API first, fallback to web (which supports cookies)
+    // - player_client=ios,android,web: Try iOS mobile API first (most resilient to 429 and PO Tokens), then Android, fallback to web
     // - player_skip=configs,js: Avoid loading extra player configurations
     // - formats=missing_pot: Don't fail if PO Token is missing for some formats
-    args.push('--extractor-args', 'youtube:player_client=android,web;player_skip=configs,js;formats=missing_pot');
+    args.push('--extractor-args', 'youtube:player_client=ios,android,web;player_skip=configs,js;formats=missing_pot');
 
     // Secure Cookies Integration:
     // Check both Render's default secure mount path (/etc/secrets/cookies.txt) and the local directory

@@ -57,11 +57,10 @@ export const ytDlpService = {
     args.push('--ignore-no-formats');
 
     // Bypass YouTube 429 rate limits and PO Token issues:
-    // - skip=hls,dash: Skip manifest downloading to reduce request count
     // - player_client=android,web: Try mobile API first, fallback to web (which supports cookies)
     // - player_skip=configs,js: Avoid loading extra player configurations
     // - formats=missing_pot: Don't fail if PO Token is missing for some formats
-    args.push('--extractor-args', 'youtube:skip=hls,dash;player_client=android,web;player_skip=configs,js;formats=missing_pot');
+    args.push('--extractor-args', 'youtube:player_client=android,web;player_skip=configs,js;formats=missing_pot');
 
     // Secure Cookies Integration:
     // Check both Render's default secure mount path (/etc/secrets/cookies.txt) and the local directory

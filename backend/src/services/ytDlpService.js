@@ -52,7 +52,7 @@ export const ytDlpService = {
         if (error) {
           console.error(`yt-dlp execution error for video ID ${videoId}:`, error.message);
           console.error(`yt-dlp stderr output:`, stderr);
-          reject(new Error('No se pudo extraer el recurso de audio. Verifica que yt-dlp esté instalado y actualizado.'));
+          reject(new Error(`yt-dlp failed: ${error.message}. Stderr: ${stderr}`));
         } else {
           const streamUrl = stdout.trim();
           if (!streamUrl) {

@@ -6,6 +6,7 @@ RUN apt-get update && apt-get install -y \
     python3-pip \
     curl \
     ffmpeg \
+    && ln -sf /usr/bin/python3 /usr/bin/python \
     && rm -rf /var/lib/apt/lists/*
 
 # Download and install the latest yt-dlp binary globally

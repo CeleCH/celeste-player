@@ -51,11 +51,14 @@ export const ytDlpService = {
     args.push('--force-ipv4');
 
     // Secure Cookies Integration:
-    // If a cookies.txt file exists in the application root, pass it to yt-dlp.
-    // This allows authenticated requests which bypasses YouTube's HTTP 429 rate limiting on datacenter IPs.
-    const cookiesPath = path.resolve(process.cwd(), 'cookies.txt');
-    if (fs.existsSync(cookiesPath)) {
-      args.push('--cookies', cookiesPath);
+    // Check both Render's default secure mount path (/etc/secrets/cookies.txt) and the local directory
+    const renderCookiesPath = '/etc/secrets/cookies.txt';
+    const localCookiesPath = path.resolve(process.cwd(), 'cookies.txt');
+
+    if (fs.existsSync(renderCookiesPath)) {
+      args.push('--cookies', renderCookiesPath);
+    } else if (fs.existsSync(localCookiesPath)) {
+      args.push('--cookies', localCookiesPath);
     }
 
     args.push(videoUrl);

@@ -4,6 +4,7 @@ import {
   searchTracks,
   getTrackDetails,
   getStreamUrl,
+  streamAudio,
   getHistory,
   addHistory,
   clearHistory,
@@ -21,6 +22,7 @@ router.get("/health", healthCheck);
 router.get("/search", searchTracks);
 router.get("/tracks/:id", getTrackDetails);
 router.get("/tracks/:id/play", getStreamUrl);
+router.get("/tracks/:id/stream", streamAudio);
 
 // History (In-memory back-up, client uses IndexedDB as primary source)
 router.get("/history", getHistory);

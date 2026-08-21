@@ -37,7 +37,9 @@ export const musicApi = {
   },
 
   /**
-   * Fetch playback streaming URL for an audio track
+   * Resolve audio stream URL for a track via yt-dlp.
+   * Returns { id, url, source } where url is the direct YouTube CDN audio URL
+   * that the browser can play directly via <audio> element.
    * @param {string} id 
    */
   async getPlaybackStream(id) {
@@ -51,5 +53,14 @@ export const musicApi = {
       console.error('API playback stream error:', error);
       throw error;
     }
-  }
+  },
+  /**
+   * Get the proxied audio stream URL for direct use in <audio> src.
+   * The backend proxies the audio from YouTube CDN with proper headers.
+   * @param {string} id 
+   * @returns {string} proxy stream URL
+   */
+  getStreamUrl(id) {
+    return `${BASE_URL}/tracks/${id}/stream`;
+  },
 };

@@ -2,7 +2,6 @@ import { useEffect, useState, useRef } from 'react';
 import { useStore, useCurrentTrack } from '../store/store';
 import { musicApi } from '../services/musicApi';
 
-// Singleton Audio instance to persist playback across page navigation
 const audio = new Audio();
 
 export default function useAudioPlayer() {
@@ -17,13 +16,12 @@ export default function useAudioPlayer() {
   const [loading, setLoading] = useState(false);
   const [playbackError, setPlaybackError] = useState('');
 
-  // Track reference to avoid duplicate URL fetches for the same song
   const lastLoadedTrackIdRef = useRef(null);
+  const loadingTrackIdRef = useRef(null);
+  const objectUrlRef = useRef(null);
 
-  // Synchronize play/pause state from global store
   useEffect(() => {
     if (!audio.src) return;
-
     if (isPlaying) {
       audio.play().catch((err) => {
         console.error('Audio play error:', err);
@@ -34,15 +32,17 @@ export default function useAudioPlayer() {
     }
   }, [isPlaying, setIsPlaying]);
 
-  // Synchronize volume configuration from global store
   useEffect(() => {
     audio.volume = volume;
   }, [volume]);
 
-  // Load new track when currentTrack changes
   useEffect(() => {
     if (!currentTrack) {
       audio.src = '';
+      if (objectUrlRef.current) {
+        URL.revokeObjectURL(objectUrlRef.current);
+        objectUrlRef.current = null;
+      }
       lastLoadedTrackIdRef.current = null;
       setCurrentTime(0);
       setDuration(0);
@@ -51,88 +51,117 @@ export default function useAudioPlayer() {
     }
 
     if (lastLoadedTrackIdRef.current === currentTrack.id) {
-      return; // Already loaded/loading this track
+      return;
     }
 
-    const loadTrackStream = async () => {
+    let aborted = false;
+
+    const loadTrack = async () => {
       setLoading(true);
       setPlaybackError('');
       lastLoadedTrackIdRef.current = currentTrack.id;
+      loadingTrackIdRef.current = currentTrack.id;
 
       try {
-        // Fetch direct audio stream URL from backend API
-        const data = await musicApi.getPlaybackStream(currentTrack.id);
-        
-        if (!data || !data.url) {
-          throw new Error('Formato de stream inválido.');
+        const streamUrl = musicApi.getStreamUrl(currentTrack.id);
+
+        const response = await fetch(streamUrl);
+
+        if (aborted || loadingTrackIdRef.current !== currentTrack.id) {
+          response.body?.cancel?.();
+          return;
         }
 
-        audio.src = data.url;
-        audio.load();
-        
-        if (isPlaying) {
-          audio.play().catch((err) => {
-            console.error('Playback trigger error:', err);
-            setIsPlaying(false);
-          });
+        if (!response.ok) {
+          let errorMsg = 'No se pudo reproducir esta canción.';
+          try {
+            const errData = await response.json();
+            if (errData.error) errorMsg = errData.error;
+          } catch {}
+          throw new Error(errorMsg);
         }
+
+        const blob = await response.blob();
+
+        if (aborted || loadingTrackIdRef.current !== currentTrack.id) {
+          return;
+        }
+
+        if (objectUrlRef.current) {
+          URL.revokeObjectURL(objectUrlRef.current);
+        }
+
+        const objectUrl = URL.createObjectURL(blob);
+        objectUrlRef.current = objectUrl;
+
+        audio.src = objectUrl;
+        audio.load();
       } catch (err) {
-        console.error('Error loading audio stream URL:', err);
-        setPlaybackError('No se pudo reproducir esta canción. Intenta nuevamente.');
+        if (aborted || loadingTrackIdRef.current !== currentTrack.id) {
+          return;
+        }
+        console.error('Error loading track:', err);
+        setPlaybackError(err.message || 'No se pudo reproducir esta canción. Intenta nuevamente.');
         setIsPlaying(false);
-        lastLoadedTrackIdRef.current = null;
-      } finally {
         setLoading(false);
+        lastLoadedTrackIdRef.current = null;
+        loadingTrackIdRef.current = null;
       }
     };
 
-    loadTrackStream();
+    loadTrack();
+
+    return () => { aborted = true; };
   }, [currentTrack, isPlaying, setIsPlaying]);
 
-  // Attach audio event listeners
   useEffect(() => {
-    const handleTimeUpdate = () => {
-      setCurrentTime(audio.currentTime);
+    const handleTimeUpdate = () => setCurrentTime(audio.currentTime);
+    const handleLoadedMetadata = () => setDuration(audio.duration);
+    const handleEnded = () => playNext();
+    const handleCanPlay = () => {
+      setLoading(false);
+      if (isPlaying) {
+        audio.play().catch(() => {});
+      }
     };
+    const handleWaiting = () => setLoading(true);
+    const handlePlay = () => setLoading(false);
 
-    const handleLoadedMetadata = () => {
-      setDuration(audio.duration);
-    };
-
-    const handleEnded = () => {
-      playNext();
-    };
-
-    const handleAudioError = (e) => {
-      console.error('HTML5 Audio playback error event:', e);
-      // Only set error if there is actually a track loaded
+    const handleAudioError = () => {
       if (currentTrack) {
+        const err = audio.error;
+        const code = err ? err.code : 'unknown';
+        const msg = err ? err.message : 'unknown';
+        console.error(`MediaError code: ${code}, message: ${msg}`);
         setPlaybackError('Error de reproducción en el recurso de audio.');
         setIsPlaying(false);
+        setLoading(false);
+        lastLoadedTrackIdRef.current = null;
+        loadingTrackIdRef.current = null;
       }
     };
 
-    // Attach listeners
     audio.addEventListener('timeupdate', handleTimeUpdate);
     audio.addEventListener('loadedmetadata', handleLoadedMetadata);
     audio.addEventListener('ended', handleEnded);
+    audio.addEventListener('canplay', handleCanPlay);
+    audio.addEventListener('waiting', handleWaiting);
+    audio.addEventListener('play', handlePlay);
     audio.addEventListener('error', handleAudioError);
 
-    // Initial state check in case audio properties loaded early
-    if (audio.duration) {
-      setDuration(audio.duration);
-    }
+    if (audio.duration) setDuration(audio.duration);
 
     return () => {
-      // Remove listeners
       audio.removeEventListener('timeupdate', handleTimeUpdate);
       audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
       audio.removeEventListener('ended', handleEnded);
+      audio.removeEventListener('canplay', handleCanPlay);
+      audio.removeEventListener('waiting', handleWaiting);
+      audio.removeEventListener('play', handlePlay);
       audio.removeEventListener('error', handleAudioError);
     };
-  }, [playNext, currentTrack, setIsPlaying]);
+  }, [playNext, currentTrack, setIsPlaying, isPlaying]);
 
-  // Controls exposed to component
   const togglePlay = () => {
     if (!currentTrack) return;
     setIsPlaying(!isPlaying);
@@ -144,12 +173,5 @@ export default function useAudioPlayer() {
     setCurrentTime(seconds);
   };
 
-  return {
-    currentTime,
-    duration,
-    loading,
-    playbackError,
-    togglePlay,
-    seek,
-  };
+  return { currentTime, duration, loading, playbackError, togglePlay, seek };
 }

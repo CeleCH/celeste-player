@@ -89,22 +89,21 @@ export const getTrackDetails = async (req, res) => {
   }
 };
 
-// GET /api/tracks/:id/play
+// GET /api/tracks/:id/play - Resolve YouTube Music audio URL via yt-dlp
 export const getStreamUrl = async (req, res) => {
   try {
     const { id } = req.params;
 
-    // Strict input validation
     if (!id || !VIDEO_ID_REGEX.test(id)) {
       return res.status(400).json({ error: "Identificador de canción inválido." });
     }
 
-    // safe resolve url using yt-dlp execution
-    const streamUrl = await ytDlpService.getAudioStreamUrl(id);
+    // Return the local proxied stream URL to maintain backwards compatibility
+    const url = `${req.protocol}://${req.get('host')}/api/tracks/${id}/stream`;
     
     res.json({
       id,
-      url: streamUrl,
+      url,
       source: "youtube_music"
     });
   } catch (error) {
@@ -112,6 +111,26 @@ export const getStreamUrl = async (req, res) => {
     res.status(500).json({ 
       error: `Error al preparar la reproducción: ${error.message}` 
     });
+  }
+};
+
+// GET /api/tracks/:id/stream - Download audio via yt-dlp and stream it
+// This endpoint downloads the audio in real-time. For unavailable tracks, 
+// yt-dlp fails and we return a proper error.
+export const streamAudio = async (req, res) => {
+  const { id } = req.params;
+
+  if (!id || !VIDEO_ID_REGEX.test(id)) {
+    return res.status(400).json({ error: "Identificador de canción inválido." });
+  }
+
+  try {
+    await ytDlpService.streamAudio(id, res);
+  } catch (error) {
+    console.error(`Error streaming audio (id: ${id}):`, error.message);
+    if (!res.headersSent) {
+      res.status(502).json({ error: `No se pudo obtener el audio: ${error.message}` });
+    }
   }
 };
 

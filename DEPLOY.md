@@ -22,9 +22,10 @@ Esta guía te guiará paso a paso para desplegar **Celeste Player** en la nube d
     git add .
     git commit -m "feat: preparar despliegue en la nube y PWA"
     git branch -M main
-    git remote add origin https://github.com/TU-USUARIO-DE-GITHUB/celeste-player.git
+    git remote add origin https://github.com/CeleCH/celeste-player.git
     git push -u origin main
     ```
+
 
 ---
 

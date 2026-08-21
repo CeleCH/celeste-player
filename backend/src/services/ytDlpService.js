@@ -81,55 +81,69 @@ export const ytDlpService = {
       const outputPath = path.join(CACHE_DIR, `${videoId}.%(ext)s`);
       const videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
 
-      // Build primary arguments (forcing IPv4 and using only ios/android clients to avoid webpage 429 rate limit blocks)
-      // We must NOT pass --cookies here, otherwise yt-dlp will skip the ios/android clients
+      const renderCookiesPath = '/etc/secrets/cookies.txt';
+      const localCookiesPath = path.resolve(process.cwd(), 'cookies.txt');
+      const tempCookiesPath = '/tmp/cookies.txt';
+      
+      let cookiesPath = null;
+      if (fs.existsSync(renderCookiesPath) && fs.statSync(renderCookiesPath).size > 0) {
+        try {
+          fs.copyFileSync(renderCookiesPath, tempCookiesPath);
+          cookiesPath = tempCookiesPath;
+        } catch (copyErr) {
+          console.error('Failed to copy cookies to temp path:', copyErr.message);
+          cookiesPath = renderCookiesPath;
+        }
+      } else if (fs.existsSync(localCookiesPath) && fs.statSync(localCookiesPath).size > 0) {
+        cookiesPath = localCookiesPath;
+      }
+
+      // Build primary arguments
       const args = [
         '-f', 'bestaudio[ext=m4a]/bestaudio/best',
         '-o', outputPath,
         '--no-playlist',
         '--force-ipv4',
         '--js-runtimes', 'node',
-        '--extractor-args', 'youtube:player_client=ios,android;player_skip=webpage,configs,js;formats=missing_pot',
-        videoUrl,
       ];
 
-      console.log(`[ytDlpService] Descargando audio para ${videoId}...`);
+      if (cookiesPath) {
+        // If we have cookies, the web client is very resilient and won't get blocked
+        args.push('--extractor-args', 'youtube:player_client=web,ios,android;player_skip=webpage,configs,js;formats=missing_pot');
+        args.push('--cookies', cookiesPath);
+      } else {
+        // Without cookies, use only ios/android to minimize blocks, skipping webpage downloads
+        args.push('--extractor-args', 'youtube:player_client=ios,android;player_skip=webpage,configs,js;formats=missing_pot');
+      }
+
+      args.push(videoUrl);
+
+      console.log(`[ytDlpService] Descargando audio para ${videoId} (con cookies: ${!!cookiesPath})...`);
 
       execFile(YTDLP_PATH, args, { timeout: 120000 }, (error, stdout, stderr) => {
         if (error) {
           const msg = stderr || error.message;
           console.error(`[ytDlpService] Descarga falló para ${videoId}: ${msg.slice(0, 300)}`);
 
-          // Fallback arguments (using fallback audio format, allowing web client, and passing cookies if available)
+          // Fallback arguments
           const fallbackArgs = [
             '-f', 'bestaudio',
             '-o', outputPath,
             '--no-playlist',
             '--force-ipv4',
             '--js-runtimes', 'node',
-            '--extractor-args', 'youtube:player_client=ios,android,web;player_skip=webpage,configs,js;formats=missing_pot',
           ];
 
-          // Cookies integration for fallback
-          const renderCookiesPath = '/etc/secrets/cookies.txt';
-          const localCookiesPath = path.resolve(process.cwd(), 'cookies.txt');
-          const tempCookiesPath = '/tmp/cookies.txt';
-
-          if (fs.existsSync(renderCookiesPath)) {
-            try {
-              fs.copyFileSync(renderCookiesPath, tempCookiesPath);
-              fallbackArgs.push('--cookies', tempCookiesPath);
-            } catch (copyErr) {
-              console.error('Failed to copy cookies to temp path:', copyErr.message);
-              fallbackArgs.push('--cookies', renderCookiesPath);
-            }
-          } else if (fs.existsSync(localCookiesPath)) {
-            fallbackArgs.push('--cookies', localCookiesPath);
+          if (cookiesPath) {
+            fallbackArgs.push('--extractor-args', 'youtube:player_client=web,ios,android;player_skip=webpage,configs,js;formats=missing_pot');
+            fallbackArgs.push('--cookies', cookiesPath);
+          } else {
+            fallbackArgs.push('--extractor-args', 'youtube:player_client=ios,android;player_skip=webpage,configs,js;formats=missing_pot');
           }
 
           fallbackArgs.push(videoUrl);
 
-          console.log(`[ytDlpService] Reintentando descarga (fallback) para ${videoId}...`);
+          console.log(`[ytDlpService] Reintentando descarga (fallback) para ${videoId} (con cookies: ${!!cookiesPath})...`);
 
           execFile(YTDLP_PATH, fallbackArgs, { timeout: 120000 }, (err2, _stdout2, stderr2) => {
             if (err2) {

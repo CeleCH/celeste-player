@@ -89,7 +89,7 @@ export const ytDlpService = {
         '--no-playlist',
         '--force-ipv4',
         '--js-runtimes', 'node',
-        '--extractor-args', 'youtube:player_client=ios,android;player_skip=configs,js;formats=missing_pot',
+        '--extractor-args', 'youtube:player_client=ios,android;player_skip=webpage,configs,js;formats=missing_pot',
         videoUrl,
       ];
 
@@ -107,7 +107,7 @@ export const ytDlpService = {
             '--no-playlist',
             '--force-ipv4',
             '--js-runtimes', 'node',
-            '--extractor-args', 'youtube:player_client=ios,android,web;player_skip=configs,js;formats=missing_pot',
+            '--extractor-args', 'youtube:player_client=ios,android,web;player_skip=webpage,configs,js;formats=missing_pot',
           ];
 
           // Cookies integration for fallback

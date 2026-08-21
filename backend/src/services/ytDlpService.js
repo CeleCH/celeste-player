@@ -108,11 +108,12 @@ export const ytDlpService = {
       ];
 
       if (cookiesPath) {
-        // If we have cookies, the web client is very resilient and won't get blocked
-        args.push('--extractor-args', 'youtube:player_client=web,ios,android;player_skip=webpage,configs,js;formats=missing_pot');
+        // If we have cookies, the web client is very resilient and won't get blocked.
+        // We MUST NOT skip webpage here, because the web client requires webpage parsing to find formats.
+        args.push('--extractor-args', 'youtube:player_client=ios,android,web;player_skip=configs,js;formats=missing_pot');
         args.push('--cookies', cookiesPath);
       } else {
-        // Without cookies, use only ios/android to minimize blocks, skipping webpage downloads
+        // Without cookies, use only ios/android, skipping webpage downloads to avoid 429 blocks
         args.push('--extractor-args', 'youtube:player_client=ios,android;player_skip=webpage,configs,js;formats=missing_pot');
       }
 
@@ -135,7 +136,8 @@ export const ytDlpService = {
           ];
 
           if (cookiesPath) {
-            fallbackArgs.push('--extractor-args', 'youtube:player_client=web,ios,android;player_skip=webpage,configs,js;formats=missing_pot');
+            // Include web client with cookies, do NOT skip webpage
+            fallbackArgs.push('--extractor-args', 'youtube:player_client=ios,android,web;player_skip=configs,js;formats=missing_pot');
             fallbackArgs.push('--cookies', cookiesPath);
           } else {
             fallbackArgs.push('--extractor-args', 'youtube:player_client=ios,android;player_skip=webpage,configs,js;formats=missing_pot');

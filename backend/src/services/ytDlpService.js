@@ -81,71 +81,36 @@ export const ytDlpService = {
       const outputPath = path.join(CACHE_DIR, `${videoId}.%(ext)s`);
       const videoUrl = `https://music.youtube.com/watch?v=${videoId}`;
 
-      const renderCookiesPath = '/etc/secrets/cookies.txt';
-      const localCookiesPath = path.resolve(process.cwd(), 'cookies.txt');
-      const tempCookiesPath = '/tmp/cookies.txt';
-      
-      let cookiesPath = null;
-      if (fs.existsSync(renderCookiesPath) && fs.statSync(renderCookiesPath).size > 0) {
-        try {
-          fs.copyFileSync(renderCookiesPath, tempCookiesPath);
-          cookiesPath = tempCookiesPath;
-        } catch (copyErr) {
-          console.error('Failed to copy cookies to temp path:', copyErr.message);
-          cookiesPath = renderCookiesPath;
-        }
-      } else if (fs.existsSync(localCookiesPath) && fs.statSync(localCookiesPath).size > 0) {
-        cookiesPath = localCookiesPath;
-      }
-
-      // Build primary arguments
+      // Build primary arguments (forcing IPv4 and using only ios/android clients to avoid webpage 429 rate limit blocks)
       const args = [
         '-f', 'bestaudio[ext=m4a]/bestaudio/best',
         '-o', outputPath,
         '--no-playlist',
         '--force-ipv4',
         '--js-runtimes', 'node',
+        '--extractor-args', 'youtube:player_client=ios,android;player_skip=webpage,configs,js;formats=missing_pot',
+        videoUrl,
       ];
 
-      if (cookiesPath) {
-        // If we have cookies, the web client is very resilient and won't get blocked.
-        // We MUST NOT skip webpage here, because the web client requires webpage parsing to find formats.
-        args.push('--extractor-args', 'youtube:player_client=ios,android,web;player_skip=configs,js;formats=missing_pot');
-        args.push('--cookies', cookiesPath);
-      } else {
-        // Without cookies, use only ios/android, skipping webpage downloads to avoid 429 blocks
-        args.push('--extractor-args', 'youtube:player_client=ios,android;player_skip=webpage,configs,js;formats=missing_pot');
-      }
-
-      args.push(videoUrl);
-
-      console.log(`[ytDlpService] Descargando audio para ${videoId} (con cookies: ${!!cookiesPath})...`);
+      console.log(`[ytDlpService] Descargando audio para ${videoId}...`);
 
       execFile(YTDLP_PATH, args, { timeout: 120000 }, (error, stdout, stderr) => {
         if (error) {
           const msg = stderr || error.message;
           console.error(`[ytDlpService] Descarga falló para ${videoId}: ${msg.slice(0, 300)}`);
 
-          // Fallback arguments
+          // Fallback arguments (using fallback audio format, but keeping force-ipv4 and ios/android clients with webpage skipping)
           const fallbackArgs = [
             '-f', 'bestaudio',
             '-o', outputPath,
             '--no-playlist',
             '--force-ipv4',
             '--js-runtimes', 'node',
+            '--extractor-args', 'youtube:player_client=ios,android;player_skip=webpage,configs,js;formats=missing_pot',
+            videoUrl,
           ];
 
-          if (cookiesPath) {
-            // Include web client with cookies, do NOT skip webpage
-            fallbackArgs.push('--extractor-args', 'youtube:player_client=ios,android,web;player_skip=configs,js;formats=missing_pot');
-            fallbackArgs.push('--cookies', cookiesPath);
-          } else {
-            fallbackArgs.push('--extractor-args', 'youtube:player_client=ios,android;player_skip=webpage,configs,js;formats=missing_pot');
-          }
-
-          fallbackArgs.push(videoUrl);
-
-          console.log(`[ytDlpService] Reintentando descarga (fallback) para ${videoId} (con cookies: ${!!cookiesPath})...`);
+          console.log(`[ytDlpService] Reintentando descarga (fallback) para ${videoId}...`);
 
           execFile(YTDLP_PATH, fallbackArgs, { timeout: 120000 }, (err2, _stdout2, stderr2) => {
             if (err2) {

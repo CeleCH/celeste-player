@@ -82,6 +82,7 @@ export const ytDlpService = {
       const videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
 
       // Build primary arguments (forcing IPv4 and using only ios/android clients to avoid webpage 429 rate limit blocks)
+      // We must NOT pass --cookies here, otherwise yt-dlp will skip the ios/android clients
       const args = [
         '-f', 'bestaudio[ext=m4a]/bestaudio/best',
         '-o', outputPath,
@@ -89,26 +90,8 @@ export const ytDlpService = {
         '--force-ipv4',
         '--js-runtimes', 'node',
         '--extractor-args', 'youtube:player_client=ios,android;player_skip=configs,js;formats=missing_pot',
+        videoUrl,
       ];
-
-      // Cookies integration for bypassing blocks
-      const renderCookiesPath = '/etc/secrets/cookies.txt';
-      const localCookiesPath = path.resolve(process.cwd(), 'cookies.txt');
-      const tempCookiesPath = '/tmp/cookies.txt';
-
-      if (fs.existsSync(renderCookiesPath)) {
-        try {
-          fs.copyFileSync(renderCookiesPath, tempCookiesPath);
-          args.push('--cookies', tempCookiesPath);
-        } catch (copyErr) {
-          console.error('Failed to copy cookies to temp path:', copyErr.message);
-          args.push('--cookies', renderCookiesPath);
-        }
-      } else if (fs.existsSync(localCookiesPath)) {
-        args.push('--cookies', localCookiesPath);
-      }
-
-      args.push(videoUrl);
 
       console.log(`[ytDlpService] Descargando audio para ${videoId}...`);
 
@@ -117,20 +100,29 @@ export const ytDlpService = {
           const msg = stderr || error.message;
           console.error(`[ytDlpService] Descarga falló para ${videoId}: ${msg.slice(0, 300)}`);
 
-          // Fallback arguments (using fallback audio format, but keeping force-ipv4 and ios/android clients)
+          // Fallback arguments (using fallback audio format, allowing web client, and passing cookies if available)
           const fallbackArgs = [
             '-f', 'bestaudio',
             '-o', outputPath,
             '--no-playlist',
             '--force-ipv4',
             '--js-runtimes', 'node',
-            '--extractor-args', 'youtube:player_client=ios,android',
+            '--extractor-args', 'youtube:player_client=ios,android,web;player_skip=configs,js;formats=missing_pot',
           ];
 
-          if (fs.existsSync(tempCookiesPath)) {
-            fallbackArgs.push('--cookies', tempCookiesPath);
-          } else if (fs.existsSync(renderCookiesPath)) {
-            fallbackArgs.push('--cookies', renderCookiesPath);
+          // Cookies integration for fallback
+          const renderCookiesPath = '/etc/secrets/cookies.txt';
+          const localCookiesPath = path.resolve(process.cwd(), 'cookies.txt');
+          const tempCookiesPath = '/tmp/cookies.txt';
+
+          if (fs.existsSync(renderCookiesPath)) {
+            try {
+              fs.copyFileSync(renderCookiesPath, tempCookiesPath);
+              fallbackArgs.push('--cookies', tempCookiesPath);
+            } catch (copyErr) {
+              console.error('Failed to copy cookies to temp path:', copyErr.message);
+              fallbackArgs.push('--cookies', renderCookiesPath);
+            }
           } else if (fs.existsSync(localCookiesPath)) {
             fallbackArgs.push('--cookies', localCookiesPath);
           }

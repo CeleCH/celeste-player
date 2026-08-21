@@ -79,7 +79,7 @@ export const ytDlpService = {
       ensureCacheDir();
 
       const outputPath = path.join(CACHE_DIR, `${videoId}.%(ext)s`);
-      const videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
+      const videoUrl = `https://music.youtube.com/watch?v=${videoId}`;
 
       const renderCookiesPath = '/etc/secrets/cookies.txt';
       const localCookiesPath = path.resolve(process.cwd(), 'cookies.txt');

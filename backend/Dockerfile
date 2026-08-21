@@ -9,6 +9,9 @@ RUN apt-get update && apt-get install -y \
     && ln -sf /usr/bin/python3 /usr/bin/python \
     && rm -rf /var/lib/apt/lists/*
 
+# Cache bust to force rebuild and fetch the latest yt-dlp release
+ENV YTDLP_CACHE_BUST=2026-08-20-v2
+
 # Download and install the latest yt-dlp binary globally
 RUN curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp \
     && chmod a+rx /usr/local/bin/yt-dlp

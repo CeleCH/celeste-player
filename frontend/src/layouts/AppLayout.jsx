@@ -113,6 +113,37 @@ export default function AppLayout() {
 
         {/* Center / Main Content Area */}
         <main className="flex-1 flex flex-col min-w-0 overflow-hidden bg-gradient-to-b from-dark-100 to-dark-300">
+          {/* Mobile Top Header (Mobile Only) */}
+          <header className="md:hidden flex items-center justify-between px-4 py-3 bg-dark-200/90 backdrop-blur-md border-b border-slate-800/80 shrink-0 z-20">
+            <div className="flex items-center gap-2">
+              <div className="bg-gradient-to-br from-brand-500 to-cyan-500 p-1.5 rounded-xl text-white shadow-md">
+                <Sparkles className="w-4 h-4 stroke-[2.5]" />
+              </div>
+              <span className="font-black text-base bg-gradient-to-r from-violet-400 via-fuchsia-300 to-cyan-300 bg-clip-text text-transparent">
+                Nebula Player
+              </span>
+            </div>
+
+            {spotifyUser ? (
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5 bg-slate-900/90 border border-emerald-500/30 px-2.5 py-1 rounded-full text-xs shadow-sm">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                  <span className="font-bold text-slate-200 text-[11px] max-w-[110px] truncate">
+                    {spotifyUser.display_name}
+                  </span>
+                </div>
+              </div>
+            ) : (
+              <button
+                onClick={() => spotifyAuth.login()}
+                className="px-3 py-1 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-dark-300 font-extrabold text-[11px] uppercase tracking-wider flex items-center gap-1 shadow-md active:scale-95 transition-transform"
+              >
+                <Music className="w-3.5 h-3.5 stroke-[2.5]" />
+                Conectar
+              </button>
+            )}
+          </header>
+
           <div className="flex-1 overflow-y-auto px-4 md:px-8 py-6 pb-36 md:pb-28">
             <Outlet />
           </div>

@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { 
   Play, Pause, SkipForward, SkipBack, Shuffle, Repeat, 
-  Volume2, VolumeX, Loader2, Heart, ListMusic, AlertTriangle, Music 
+  Volume2, VolumeX, Loader2, Heart, AlertTriangle, Music,
+  Smartphone, Laptop, Radio, ExternalLink, RefreshCw, Check, X, Info
 } from 'lucide-react';
 import { useStore, useCurrentTrack } from '../store/store';
 import useSpotifyPlayer from '../hooks/useSpotifyPlayer';
@@ -27,7 +28,15 @@ export default function AudioPlayer() {
     duration, 
     loading, 
     playbackError, 
+    setPlaybackError,
     isPlayerReady, 
+    isIOS,
+    availableDevices,
+    selectedDevice,
+    isFetchingDevices,
+    fetchAvailableDevices,
+    selectDevice,
+    openInSpotify,
     togglePlay, 
     seek, 
     next, 
@@ -36,10 +45,11 @@ export default function AudioPlayer() {
 
   const [prevVolume, setPrevVolume] = useState(0.8);
   const [isMobileExpanded, setIsMobileExpanded] = useState(false);
+  const [isDeviceModalOpen, setIsDeviceModalOpen] = useState(false);
 
   if (!currentTrack) return null;
 
-  const isFav = favorites.some(t => t.id === currentTrack.id);
+  const isFav = favorites.some((t) => t.id === currentTrack.id);
 
   const formatTime = (sec) => {
     if (!sec || isNaN(sec)) return '0:00';
@@ -69,22 +79,54 @@ export default function AudioPlayer() {
 
   const progressPercent = duration > 0 ? (currentTime / duration) * 100 : 0;
 
+  // Helper to get device icon
+  const getDeviceIcon = (type) => {
+    const t = (type || '').toLowerCase();
+    if (t === 'smartphone') return <Smartphone className="w-4 h-4 text-emerald-400 shrink-0" />;
+    if (t === 'computer') return <Laptop className="w-4 h-4 text-cyan-400 shrink-0" />;
+    return <Radio className="w-4 h-4 text-violet-400 shrink-0" />;
+  };
+
   return (
     <div className="glass-panel border-t border-slate-800/80 shadow-2xl relative">
       
-      {/* Playback error toast indicator */}
+      {/* Playback Error / Status Toast */}
       {playbackError && (
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-full bg-rose-950 border border-rose-500/40 text-rose-200 text-xs px-4 py-2.5 rounded-t-xl flex items-center gap-2 shadow-xl z-50">
-          <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
-          <span>{playbackError}</span>
-          {!spotifyUser && (
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-full bg-slate-900/95 border border-rose-500/40 text-rose-200 text-xs px-4 py-2.5 rounded-t-xl flex flex-wrap items-center justify-between gap-3 shadow-2xl z-50 max-w-lg w-[95%]">
+          <div className="flex items-center gap-2 min-w-0 flex-1">
+            <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
+            <span className="truncate">{playbackError}</span>
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0">
+            {/* Quick button to open directly in Spotify */}
             <button
-              onClick={() => spotifyAuth.login()}
-              className="ml-2 px-2.5 py-1 bg-emerald-500 text-dark-300 font-bold rounded-lg text-[10px] uppercase hover:bg-emerald-400"
+              onClick={() => openInSpotify(currentTrack)}
+              className="px-2.5 py-1 bg-emerald-500 hover:bg-emerald-400 text-dark-300 font-bold rounded-lg text-[10px] uppercase flex items-center gap-1 shadow-md transition-transform active:scale-95"
             >
-              Conectar Spotify
+              <ExternalLink className="w-3 h-3 stroke-[2.5]" />
+              Abrir en Spotify
             </button>
-          )}
+
+            {/* Devices button */}
+            {spotifyUser && (
+              <button
+                onClick={() => { setIsDeviceModalOpen(true); fetchAvailableDevices(); }}
+                className="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold rounded-lg text-[10px] uppercase flex items-center gap-1 border border-slate-700 transition-colors"
+              >
+                <Smartphone className="w-3 h-3" />
+                Dispositivos
+              </button>
+            )}
+
+            {/* Close button */}
+            <button
+              onClick={() => setPlaybackError('')}
+              className="p-1 text-slate-400 hover:text-white rounded transition-colors"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
         </div>
       )}
 
@@ -93,7 +135,7 @@ export default function AudioPlayer() {
         <div className="bg-gradient-to-r from-emerald-950/80 via-dark-200 to-emerald-950/80 border-b border-emerald-500/20 px-4 py-1.5 flex items-center justify-between text-xs">
           <div className="flex items-center gap-2 text-emerald-400 font-medium">
             <Music className="w-3.5 h-3.5 animate-pulse" />
-            <span>Inicia sesión con Spotify Premium para reproducir música oficial en alta fidelidad.</span>
+            <span>Conecta Spotify para escuchar las pistas completas en alta fidelidad.</span>
           </div>
           <button
             onClick={() => spotifyAuth.login()}
@@ -121,7 +163,7 @@ export default function AudioPlayer() {
               {currentTrack.title}
             </h4>
             <p className="text-xs text-slate-500 truncate mt-0.5">
-              {currentTrack.artists?.map(a => a.name).join(', ') || 'Artista Desconocido'}
+              {currentTrack.artists?.map((a) => a.name).join(', ') || 'Artista Desconocido'}
             </p>
           </div>
           <button
@@ -209,7 +251,6 @@ export default function AudioPlayer() {
                 onChange={handleSeekChange}
                 className="w-full slider-seeker cursor-pointer"
               />
-              {/* Highlight active progress track */}
               <div 
                 className="absolute left-0 bg-gradient-to-r from-brand-500 to-cyan-400 h-1 rounded-l-full pointer-events-none" 
                 style={{ width: `${progressPercent}%` }} 
@@ -221,8 +262,37 @@ export default function AudioPlayer() {
           </div>
         </div>
 
-        {/* Right Side: Volume Controls */}
+        {/* Right Side: Volume, Devices & Spotify Open */}
         <div className="flex items-center justify-end gap-3 pr-2">
+          {/* Quick Open in Spotify */}
+          <button
+            onClick={() => openInSpotify(currentTrack)}
+            title="Abrir en Spotify"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-xs font-bold transition-all hover:scale-105 active:scale-95"
+          >
+            <ExternalLink className="w-3.5 h-3.5 stroke-[2.5]" />
+            <span className="hidden xl:inline">Spotify</span>
+          </button>
+
+          {/* Devices selector trigger */}
+          {spotifyUser && (
+            <button
+              onClick={() => { setIsDeviceModalOpen(true); fetchAvailableDevices(); }}
+              title="Dispositivos Spotify Connect"
+              className={`p-2 rounded-xl border transition-all flex items-center gap-1.5 text-xs font-medium ${
+                selectedDevice
+                  ? 'bg-cyan-500/10 border-cyan-500/30 text-cyan-300'
+                  : 'bg-slate-800/80 border-slate-700/60 text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              {selectedDevice ? getDeviceIcon(selectedDevice.type) : <Laptop className="w-4 h-4" />}
+              <span className="max-w-[80px] truncate text-[11px] hidden lg:inline">
+                {selectedDevice?.name || (isPlayerReady ? 'Web Player' : 'Conectar')}
+              </span>
+            </button>
+          )}
+
+          {/* Volume Slider */}
           <button
             onClick={handleVolumeToggle}
             className="text-slate-400 hover:text-slate-150 transition-colors"
@@ -250,7 +320,7 @@ export default function AudioPlayer() {
       {/* 2. Mobile Floating Mini-Player Layout */}
       <div className="md:hidden flex flex-col w-full bg-dark-200/90 backdrop-blur-md border-t border-slate-850">
         
-        {/* Small top track seeker line (minimalistic) */}
+        {/* Small top track seeker line */}
         <div className="relative w-full h-[3px] bg-slate-800">
           <div 
             className="bg-gradient-to-r from-brand-500 to-cyan-400 h-full transition-all duration-300"
@@ -258,10 +328,10 @@ export default function AudioPlayer() {
           />
         </div>
 
-        <div className="flex items-center justify-between px-4 py-3">
+        <div className="flex items-center justify-between px-4 py-2.5">
           {/* Mini Meta Info */}
           <div 
-            className="flex items-center gap-3 min-w-0 flex-1"
+            className="flex items-center gap-3 min-w-0 flex-1 cursor-pointer"
             onClick={() => setIsMobileExpanded(!isMobileExpanded)}
           >
             <div className="w-10 h-10 bg-slate-800 rounded-lg overflow-hidden shrink-0 shadow">
@@ -276,13 +346,23 @@ export default function AudioPlayer() {
                 {currentTrack.title}
               </h4>
               <p className="text-[10px] text-slate-550 truncate mt-0.5">
-                {currentTrack.artists?.map(a => a.name).join(', ') || 'Artista Desconocido'}
+                {currentTrack.artists?.map((a) => a.name).join(', ') || 'Artista Desconocido'}
               </p>
             </div>
           </div>
 
-          {/* Quick Playback controls */}
-          <div className="flex items-center gap-2">
+          {/* Quick Playback & Action controls */}
+          <div className="flex items-center gap-1.5 shrink-0">
+            {/* Direct Open in Spotify button for Mobile */}
+            <button
+              onClick={() => openInSpotify(currentTrack)}
+              className="p-2 text-emerald-400 hover:text-emerald-300 bg-emerald-500/10 border border-emerald-500/20 rounded-lg transition-colors active:scale-95"
+              title="Abrir en Spotify"
+            >
+              <ExternalLink className="w-4 h-4 stroke-[2.5]" />
+            </button>
+
+            {/* Favorite button */}
             <button
               onClick={() => toggleFavorite(currentTrack)}
               className={`p-2 rounded-lg transition-colors ${
@@ -292,6 +372,7 @@ export default function AudioPlayer() {
               <Heart className={`w-4 h-4 ${isFav ? 'fill-current' : ''}`} />
             </button>
 
+            {/* Play/Pause */}
             <button
               onClick={togglePlay}
               disabled={loading}
@@ -306,6 +387,7 @@ export default function AudioPlayer() {
               )}
             </button>
 
+            {/* Next */}
             <button
               onClick={next}
               className="p-2 text-slate-400 hover:text-slate-100 shrink-0"
@@ -315,10 +397,10 @@ export default function AudioPlayer() {
           </div>
         </div>
 
-        {/* Mobile Seeker Drawer when tapped */}
+        {/* Mobile Fullscreen Drawer when tapped */}
         {isMobileExpanded && (
-          <div className="fixed inset-0 bg-dark-300 z-50 flex flex-col p-6 animate-slideIn">
-            {/* Header close button */}
+          <div className="fixed inset-0 bg-dark-300 z-50 flex flex-col p-6 animate-slideIn overflow-y-auto">
+            {/* Header */}
             <div className="flex items-center justify-between pb-4">
               <button 
                 onClick={() => setIsMobileExpanded(false)}
@@ -326,15 +408,18 @@ export default function AudioPlayer() {
               >
                 Cerrar
               </button>
-              <span className="text-xs font-bold text-violet-400 uppercase tracking-widest flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping"></span>
-                Reproduciendo en Nebula
-              </span>
-              <div className="w-12" /> {/* spacing spacer */}
+
+              <button
+                onClick={() => { setIsDeviceModalOpen(true); fetchAvailableDevices(); }}
+                className="text-xs font-bold text-cyan-400 bg-cyan-950/60 border border-cyan-500/30 px-3 py-1.5 rounded-lg flex items-center gap-1.5 shadow"
+              >
+                <Smartphone className="w-3.5 h-3.5" />
+                <span>{selectedDevice?.name || 'Dispositivos'}</span>
+              </button>
             </div>
 
             {/* Heavy Artwork Display */}
-            <div className="flex-1 flex flex-col items-center justify-center py-6">
+            <div className="flex-1 flex flex-col items-center justify-center py-4">
               <div className="w-64 h-64 bg-slate-900 rounded-3xl overflow-hidden shadow-2xl border border-violet-500/20 relative">
                 <img
                   src={currentTrack.thumbnail || 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=300&h=300&fit=crop'}
@@ -347,13 +432,29 @@ export default function AudioPlayer() {
               <div className="text-center mt-6 max-w-sm">
                 <h3 className="font-extrabold text-xl text-white line-clamp-1">{currentTrack.title}</h3>
                 <p className="text-xs text-slate-400 mt-1 line-clamp-1">
-                  {currentTrack.artists?.map(a => a.name).join(', ') || 'Artista Desconocido'}
+                  {currentTrack.artists?.map((a) => a.name).join(', ') || 'Artista Desconocido'}
                 </p>
+              </div>
+
+              {/* Highlight Action: Open in Spotify (Ideal for iPhone & Free users) */}
+              <div className="mt-4 w-full max-w-xs">
+                <button
+                  onClick={() => openInSpotify(currentTrack)}
+                  className="w-full py-3 px-4 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 text-dark-300 font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20 active:scale-95 transition-transform"
+                >
+                  <ExternalLink className="w-4 h-4 stroke-[2.5]" />
+                  Abrir en la App de Spotify
+                </button>
+                {isIOS && (
+                  <p className="text-[10px] text-slate-400 text-center mt-1.5">
+                    Recomendado en iPhone para reproducción oficial sin cortes.
+                  </p>
+                )}
               </div>
             </div>
 
             {/* Seeker slider */}
-            <div className="space-y-2">
+            <div className="space-y-2 mt-2">
               <div className="flex items-center justify-between text-[10px] font-bold text-slate-500 px-1">
                 <span>{formatTime(currentTime)}</span>
                 <span>{formatTime(duration)}</span>
@@ -375,7 +476,7 @@ export default function AudioPlayer() {
             </div>
 
             {/* Interactive Control Buttons */}
-            <div className="flex flex-col items-center gap-6 py-6 border-t border-slate-800/80 mt-4">
+            <div className="flex flex-col items-center gap-4 py-4 border-t border-slate-800/80 mt-4">
               <div className="flex items-center justify-around w-full max-w-xs">
                 <button
                   onClick={() => setShuffle(!shuffle)}
@@ -453,6 +554,124 @@ export default function AudioPlayer() {
           </div>
         )}
       </div>
+
+      {/* 3. Spotify Connect Devices Modal */}
+      {isDeviceModalOpen && (
+        <div className="fixed inset-0 bg-dark-300/80 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-fadeIn">
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-md w-full shadow-2xl relative">
+            {/* Header */}
+            <div className="flex items-center justify-between pb-4 border-b border-slate-800/80">
+              <div className="flex items-center gap-2">
+                <Smartphone className="w-5 h-5 text-emerald-400" />
+                <h3 className="font-extrabold text-white text-base">Dispositivos Spotify</h3>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={fetchAvailableDevices}
+                  disabled={isFetchingDevices}
+                  className="p-2 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition-colors"
+                  title="Refrescar dispositivos"
+                >
+                  <RefreshCw className={`w-4 h-4 ${isFetchingDevices ? 'animate-spin text-cyan-400' : ''}`} />
+                </button>
+                <button
+                  onClick={() => setIsDeviceModalOpen(false)}
+                  className="p-2 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            {/* iOS Informative Notice */}
+            {isIOS && (
+              <div className="my-4 p-3 rounded-2xl bg-violet-950/40 border border-violet-500/30 text-violet-200 text-xs flex gap-2.5">
+                <Info className="w-4 h-4 text-violet-400 shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-bold">Aviso para iPhone (iOS):</p>
+                  <p className="text-[11px] text-slate-300 mt-0.5">
+                    Apple restringe la reproducción directa en la web. Abre la aplicación oficial de Spotify en tu iPhone para escuchar vía Spotify Connect o pulsa el botón directo.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Free Account Notice */}
+            {spotifyUser && spotifyUser.product !== 'premium' && (
+              <div className="my-3 p-3 rounded-2xl bg-amber-950/40 border border-amber-500/30 text-amber-200 text-xs flex gap-2.5">
+                <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-bold">Cuenta Spotify Free</p>
+                  <p className="text-[11px] text-slate-300 mt-0.5">
+                    Spotify requiere una cuenta Premium para el control remoto. Puedes usar el botón "Abrir en Spotify" para escuchar en tu app de Spotify gratis.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Devices List */}
+            <div className="mt-4 space-y-2 max-h-60 overflow-y-auto">
+              {availableDevices.length > 0 ? (
+                availableDevices.map((device) => {
+                  const isCurrent = device.id === selectedDevice?.id || device.is_active;
+                  return (
+                    <button
+                      key={device.id}
+                      onClick={() => {
+                        selectDevice(device);
+                        setIsDeviceModalOpen(false);
+                      }}
+                      className={`w-full p-3.5 rounded-2xl border flex items-center justify-between text-left transition-all ${
+                        isCurrent
+                          ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-300 shadow-md'
+                          : 'bg-slate-850/50 border-slate-800 hover:border-slate-700 text-slate-200 hover:bg-slate-800'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        {getDeviceIcon(device.type)}
+                        <div className="min-w-0">
+                          <p className="font-bold text-sm truncate">{device.name}</p>
+                          <p className="text-[10px] text-slate-400 uppercase tracking-wider">
+                            {device.type || 'Dispositivo'}
+                          </p>
+                        </div>
+                      </div>
+                      {isCurrent && (
+                        <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-400 bg-emerald-500/20 px-2 py-0.5 rounded-md">
+                          <Check className="w-3.5 h-3.5" />
+                          <span>Activo</span>
+                        </div>
+                      )}
+                    </button>
+                  );
+                })
+              ) : (
+                <div className="text-center py-6 px-4 bg-slate-850/40 rounded-2xl border border-slate-800/60">
+                  <Smartphone className="w-8 h-8 text-slate-500 mx-auto mb-2 animate-bounce" />
+                  <p className="text-sm font-bold text-slate-300">No hay dispositivos activos</p>
+                  <p className="text-xs text-slate-500 mt-1 max-w-xs mx-auto">
+                    Abre la aplicación de Spotify en tu iPhone o computadora para que aparezca aquí automáticamente.
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Quick Action Button */}
+            <div className="mt-5 pt-4 border-t border-slate-800/80 flex flex-col gap-2">
+              <button
+                onClick={() => {
+                  openInSpotify(currentTrack);
+                  setIsDeviceModalOpen(false);
+                }}
+                className="w-full py-3 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-dark-300 font-extrabold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-transform active:scale-95 shadow-lg shadow-emerald-500/20"
+              >
+                <ExternalLink className="w-4 h-4 stroke-[2.5]" />
+                Abrir canción en la App de Spotify
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -71,8 +71,8 @@ export default function Search() {
           type="text"
           value={inputVal}
           onChange={(e) => setInputVal(e.target.value)}
-          placeholder="Buscar canciones, artistas, álbumes..."
-          className="w-full bg-dark-200 border border-slate-800 focus:border-brand-500 rounded-2xl pl-12 pr-10 py-3.5 text-sm placeholder-slate-500 text-slate-100 outline-none transition-all focus:ring-2 focus:ring-brand-500/10"
+          placeholder="Buscar canciones, artistas, álbumes en Nebula..."
+          className="w-full bg-dark-200 border border-violet-900/30 focus:border-cyan-400 rounded-2xl pl-12 pr-10 py-3.5 text-sm placeholder-slate-500 text-slate-100 outline-none transition-all focus:ring-2 focus:ring-cyan-500/20 shadow-lg"
         />
         {inputVal && (
           <button
@@ -129,7 +129,7 @@ export default function Search() {
                 onClick={() => setActiveTab(tab)}
                 className={`px-5 py-3 border-b-2 font-semibold text-sm capitalize whitespace-nowrap transition-colors -mb-px ${
                   activeTab === tab
-                    ? 'border-brand-500 text-brand-500'
+                    ? 'border-cyan-400 text-cyan-400 font-bold'
                     : 'border-transparent text-slate-450 hover:text-slate-200'
                 }`}
               >
@@ -173,7 +173,7 @@ export default function Search() {
                           />
                           <button
                             onClick={() => playTrack(track)}
-                            className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-brand-500"
+                            className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-cyan-400"
                           >
                             <Play className="w-5 h-5 fill-current" />
                           </button>
@@ -181,7 +181,7 @@ export default function Search() {
 
                         {/* Title and artist */}
                         <div className="flex-1 min-w-0">
-                          <h4 className="font-bold text-sm text-slate-200 truncate group-hover:text-brand-500 transition-colors">
+                          <h4 className="font-bold text-sm text-slate-200 truncate group-hover:text-cyan-400 transition-colors">
                             {track.title}
                           </h4>
                           <p className="text-xs text-slate-500 truncate mt-0.5">

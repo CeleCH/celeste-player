@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
-import { Home, Search, Library, Heart, ListMusic, History, Settings, Music } from 'lucide-react';
+import { Home, Search, Library, Heart, ListMusic, History, Settings, Music, Sparkles } from 'lucide-react';
 import { useStore } from '../store/store';
 import AudioPlayer from '../components/AudioPlayer';
 
@@ -28,21 +28,21 @@ export default function AppLayout() {
       <div className="flex flex-1 overflow-hidden relative">
         
         {/* Left Sidebar (Desktop Only) */}
-        <aside className="hidden md:flex flex-col w-64 bg-dark-200 border-r border-slate-800/60 p-5 shrink-0 glass-panel">
+        <aside className="hidden md:flex flex-col w-64 bg-dark-200 border-r border-violet-900/20 p-5 shrink-0 glass-panel">
           <div className="flex items-center gap-3 mb-8 px-2">
-            <div className="bg-brand-500 p-2 rounded-xl text-dark-300 glow-emerald animate-pulse-slow">
-              <Music className="w-6 h-6 stroke-[2.5]" />
+            <div className="bg-gradient-to-br from-brand-500 to-cyan-500 p-2.5 rounded-2xl text-white glow-nebula animate-pulse-slow shadow-lg shadow-brand-500/25">
+              <Sparkles className="w-5 h-5 stroke-[2.5]" />
             </div>
             <div>
-              <h1 className="font-extrabold text-lg tracking-wider bg-gradient-to-r from-emerald-400 to-teal-200 bg-clip-text text-transparent">
-                Celeste
+              <h1 className="font-black text-xl tracking-wider bg-gradient-to-r from-violet-400 via-fuchsia-300 to-cyan-300 bg-clip-text text-transparent">
+                Nebula
               </h1>
-              <p className="text-[10px] text-slate-500 font-semibold tracking-widest uppercase -mt-1">Player</p>
+              <p className="text-[10px] text-cyan-400 font-bold tracking-widest uppercase -mt-1">Player</p>
             </div>
           </div>
 
-          <nav className="flex-1 space-y-1">
-            <p className="text-[10px] uppercase tracking-wider text-slate-600 font-bold px-2 mb-2">Menú Principal</p>
+          <nav className="flex-1 space-y-1.5">
+            <p className="text-[10px] uppercase tracking-wider text-slate-500 font-bold px-2 mb-2">Menú Cósmico</p>
             {navItems.map((item) => {
               const Icon = item.icon;
               return (
@@ -52,8 +52,8 @@ export default function AppLayout() {
                   className={({ isActive }) =>
                     `flex items-center gap-4 px-4 py-3 rounded-xl font-medium text-sm transition-all duration-200 ${
                       isActive
-                        ? 'bg-gradient-to-r from-brand-600 to-brand-500 text-white font-semibold shadow-lg shadow-emerald-500/10'
-                        : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/40'
+                        ? 'bg-gradient-to-r from-brand-600 via-brand-500 to-cyan-600 text-white font-semibold shadow-lg shadow-brand-500/20 glow-nebula'
+                        : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 hover:border-l-2 hover:border-cyan-400'
                     }`
                   }
                 >
@@ -65,9 +65,10 @@ export default function AppLayout() {
           </nav>
 
           {/* Sidebar Footer info */}
-          <div className="pt-4 border-t border-slate-800/50 text-center">
-            <span className="text-[10px] text-slate-600 font-semibold uppercase tracking-widest">
-              Uso Personal y Local
+          <div className="pt-4 border-t border-slate-800/60 text-center">
+            <span className="text-[10px] text-violet-400/80 font-bold uppercase tracking-widest flex items-center justify-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping"></span>
+              Audio HD Libre & Spotify
             </span>
           </div>
         </aside>

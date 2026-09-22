@@ -19,34 +19,54 @@ export default function useAudioPlayer() {
   const lastLoadedTrackIdRef = useRef(null);
   const loadingTrackIdRef = useRef(null);
   const objectUrlRef = useRef(null);
+  const isPlayingRef = useRef(isPlaying);
 
+  // Keep isPlayingRef in sync
   useEffect(() => {
-    if (!audio.src) return;
-    if (isPlaying) {
-      audio.play().catch((err) => {
-        console.error('Audio play error:', err);
-        setIsPlaying(false);
-      });
-    } else {
-      audio.pause();
-    }
-  }, [isPlaying, setIsPlaying]);
+    isPlayingRef.current = isPlaying;
+  }, [isPlaying]);
 
+  // Volume listener
   useEffect(() => {
     audio.volume = volume;
   }, [volume]);
 
+  // Play / Pause toggler when user clicks play/pause button
+  useEffect(() => {
+    if (!audio.src || !objectUrlRef.current) return;
+    if (loading) return;
+
+    if (isPlaying) {
+      const playPromise = audio.play();
+      if (playPromise !== undefined) {
+        playPromise.catch((err) => {
+          // If aborted due to pause, don't worry
+          if (err.name !== 'AbortError') {
+            console.error('Audio play error:', err);
+            setIsPlaying(false);
+          }
+        });
+      }
+    } else {
+      audio.pause();
+    }
+  }, [isPlaying, loading, setIsPlaying]);
+
+  // Track loader effect
   useEffect(() => {
     if (!currentTrack) {
-      audio.src = '';
+      audio.pause();
+      audio.removeAttribute('src');
       if (objectUrlRef.current) {
         URL.revokeObjectURL(objectUrlRef.current);
         objectUrlRef.current = null;
       }
       lastLoadedTrackIdRef.current = null;
+      loadingTrackIdRef.current = null;
       setCurrentTime(0);
       setDuration(0);
       setPlaybackError('');
+      setLoading(false);
       return;
     }
 
@@ -63,7 +83,7 @@ export default function useAudioPlayer() {
       loadingTrackIdRef.current = currentTrack.id;
 
       try {
-        const streamUrl = musicApi.getStreamUrl(currentTrack.id);
+        const streamUrl = musicApi.getStreamUrl(currentTrack);
 
         const response = await fetch(streamUrl);
 
@@ -89,6 +109,7 @@ export default function useAudioPlayer() {
 
         if (objectUrlRef.current) {
           URL.revokeObjectURL(objectUrlRef.current);
+          objectUrlRef.current = null;
         }
 
         const objectUrl = URL.createObjectURL(blob);
@@ -96,6 +117,19 @@ export default function useAudioPlayer() {
 
         audio.src = objectUrl;
         audio.load();
+        setLoading(false);
+
+        // Autoplay if store wants it playing
+        if (isPlayingRef.current) {
+          const playPromise = audio.play();
+          if (playPromise !== undefined) {
+            playPromise.catch((err) => {
+              if (err.name !== 'AbortError') {
+                console.warn('Autoplay prevented:', err);
+              }
+            });
+          }
+        }
       } catch (err) {
         if (aborted || loadingTrackIdRef.current !== currentTrack.id) {
           return;
@@ -111,33 +145,27 @@ export default function useAudioPlayer() {
 
     loadTrack();
 
-    return () => { aborted = true; };
-  }, [currentTrack, isPlaying, setIsPlaying]);
+    return () => { 
+      aborted = true; 
+    };
+  }, [currentTrack, setIsPlaying]);
 
+  // Audio Event Listeners
   useEffect(() => {
     const handleTimeUpdate = () => setCurrentTime(audio.currentTime);
     const handleLoadedMetadata = () => setDuration(audio.duration);
     const handleEnded = () => playNext();
-    const handleCanPlay = () => {
-      setLoading(false);
-      if (isPlaying) {
-        audio.play().catch(() => {});
-      }
-    };
+    const handleCanPlay = () => setLoading(false);
     const handleWaiting = () => setLoading(true);
     const handlePlay = () => setLoading(false);
 
     const handleAudioError = () => {
-      if (currentTrack) {
+      if (currentTrack && objectUrlRef.current) {
         const err = audio.error;
-        const code = err ? err.code : 'unknown';
-        const msg = err ? err.message : 'unknown';
-        console.error(`MediaError code: ${code}, message: ${msg}`);
-        setPlaybackError('Error de reproducción en el recurso de audio.');
+        console.error('Audio element error:', err);
+        setPlaybackError('Error al decodificar el archivo de audio.');
         setIsPlaying(false);
         setLoading(false);
-        lastLoadedTrackIdRef.current = null;
-        loadingTrackIdRef.current = null;
       }
     };
 
@@ -149,8 +177,6 @@ export default function useAudioPlayer() {
     audio.addEventListener('play', handlePlay);
     audio.addEventListener('error', handleAudioError);
 
-    if (audio.duration) setDuration(audio.duration);
-
     return () => {
       audio.removeEventListener('timeupdate', handleTimeUpdate);
       audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
@@ -160,7 +186,7 @@ export default function useAudioPlayer() {
       audio.removeEventListener('play', handlePlay);
       audio.removeEventListener('error', handleAudioError);
     };
-  }, [playNext, currentTrack, setIsPlaying, isPlaying]);
+  }, [playNext, currentTrack, setIsPlaying]);
 
   const togglePlay = () => {
     if (!currentTrack) return;
@@ -168,7 +194,7 @@ export default function useAudioPlayer() {
   };
 
   const seek = (seconds) => {
-    if (!audio.src) return;
+    if (!audio.src || !objectUrlRef.current) return;
     audio.currentTime = seconds;
     setCurrentTime(seconds);
   };

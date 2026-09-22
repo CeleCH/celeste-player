@@ -31,3 +31,10 @@ Thumbs.db
 src-tauri/target/
 build/
 bin/
+
+# Audio Cache & Local Binaries
+.audio-cache/
+backend/.audio-cache/
+*.exe
+cookies.txt
+

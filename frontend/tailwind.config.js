@@ -9,17 +9,24 @@ export default {
     extend: {
       colors: {
         brand: {
-          50: '#ecfdf5',
-          100: '#d1fae5',
-          500: '#10b981', // emerald-500
-          600: '#059669', // emerald-600
-          700: '#047857', // emerald-700
+          50: '#f5f3ff',
+          100: '#ede9fe',
+          400: '#a78bfa',
+          500: '#8b5cf6', // Cosmic Violet
+          600: '#7c3aed',
+          700: '#6d28d9',
+        },
+        neon: {
+          cyan: '#06b6d4',
+          violet: '#8b5cf6',
+          magenta: '#ec4899',
+          pink: '#f43f5e',
         },
         dark: {
           50: '#1e293b',  // slate-800
           100: '#0f172a', // slate-900
-          200: '#0a0f1d', // extra dark deep blue-slate
-          300: '#030712', // pitch black
+          200: '#080d1a', // extra dark cosmic space
+          300: '#030611', // cosmic void
         }
       },
       animation: {

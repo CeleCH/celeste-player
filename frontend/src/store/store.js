@@ -9,10 +9,11 @@ import {
   getSetting 
 } from '../utils/db.js';
 
-// Simple LocalStorage fallbacks for immediate sync, backed up by async IndexedDB
+// LocalStorage helpers with seamless migration from legacy celeste_ to nebula_
 const loadFromLocalStorage = (key, defaultValue) => {
   try {
-    const saved = localStorage.getItem(key);
+    const nebulaKey = key.replace('celeste_', 'nebula_');
+    const saved = localStorage.getItem(nebulaKey) || localStorage.getItem(key);
     return saved ? JSON.parse(saved) : defaultValue;
   } catch (error) {
     return defaultValue;
@@ -21,7 +22,8 @@ const loadFromLocalStorage = (key, defaultValue) => {
 
 const saveToLocalStorage = (key, value) => {
   try {
-    localStorage.setItem(key, JSON.stringify(value));
+    const nebulaKey = key.replace('celeste_', 'nebula_');
+    localStorage.setItem(nebulaKey, JSON.stringify(value));
   } catch (error) {}
 };
 

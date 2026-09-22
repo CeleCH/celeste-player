@@ -106,7 +106,7 @@ export default function AudioPlayer() {
             <button
               onClick={() => setShuffle(!shuffle)}
               className={`p-1.5 rounded-lg transition-colors ${
-                shuffle ? 'text-brand-500' : 'text-slate-550 hover:text-slate-300'
+                shuffle ? 'text-cyan-400' : 'text-slate-500 hover:text-slate-300'
               }`}
               title="Aleatorio"
             >
@@ -124,7 +124,7 @@ export default function AudioPlayer() {
             <button
               onClick={togglePlay}
               disabled={loading}
-              className="p-3 bg-brand-500 text-dark-300 hover:scale-105 active:scale-95 rounded-full shadow-lg shadow-emerald-500/10 hover:shadow-emerald-500/25 glow-hover transition-all shrink-0"
+              className="p-3 bg-gradient-to-r from-brand-500 to-cyan-500 text-white hover:scale-105 active:scale-95 rounded-full shadow-lg shadow-brand-500/30 glow-nebula transition-all shrink-0"
               title={isPlaying ? 'Pausar' : 'Reproducir'}
             >
               {loading ? (
@@ -147,13 +147,13 @@ export default function AudioPlayer() {
             <button
               onClick={cycleRepeat}
               className={`p-1.5 rounded-lg relative transition-colors ${
-                repeat !== 'none' ? 'text-brand-500' : 'text-slate-550 hover:text-slate-300'
+                repeat !== 'none' ? 'text-cyan-400' : 'text-slate-500 hover:text-slate-300'
               }`}
               title="Repetir"
             >
               <Repeat className="w-4 h-4" />
               {repeat === 'one' && (
-                <span className="absolute -top-1 -right-1 text-[8px] bg-brand-500 text-dark-300 px-0.5 rounded font-black leading-none">
+                <span className="absolute -top-1 -right-1 text-[8px] bg-cyan-400 text-dark-300 px-0.5 rounded font-black leading-none">
                   1
                 </span>
               )}
@@ -176,7 +176,7 @@ export default function AudioPlayer() {
               />
               {/* Highlight active progress track */}
               <div 
-                className="absolute left-0 bg-brand-500 h-1 rounded-l-full pointer-events-none" 
+                className="absolute left-0 bg-gradient-to-r from-brand-500 to-cyan-400 h-1 rounded-l-full pointer-events-none" 
                 style={{ width: `${progressPercent}%` }} 
               />
             </div>
@@ -205,7 +205,7 @@ export default function AudioPlayer() {
               className="w-full slider-seeker cursor-pointer"
             />
             <div 
-              className="absolute left-0 bg-brand-500 h-1 rounded-l-full pointer-events-none" 
+              className="absolute left-0 bg-gradient-to-r from-brand-500 to-cyan-400 h-1 rounded-l-full pointer-events-none" 
               style={{ width: `${volume * 100}%` }} 
             />
           </div>
@@ -218,7 +218,7 @@ export default function AudioPlayer() {
         {/* Small top track seeker line (minimalistic) */}
         <div className="relative w-full h-[3px] bg-slate-800">
           <div 
-            className="bg-brand-500 h-full transition-all duration-300"
+            className="bg-gradient-to-r from-brand-500 to-cyan-400 h-full transition-all duration-300"
             style={{ width: `${progressPercent}%` }}
           />
         </div>
@@ -260,7 +260,7 @@ export default function AudioPlayer() {
             <button
               onClick={togglePlay}
               disabled={loading}
-              className="p-2.5 bg-brand-500 text-dark-300 rounded-full shrink-0 active:scale-90 transition-transform"
+              className="p-2.5 bg-gradient-to-r from-brand-500 to-cyan-500 text-white rounded-full shrink-0 active:scale-90 transition-transform shadow-md glow-nebula"
             >
               {loading ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -287,21 +287,22 @@ export default function AudioPlayer() {
             <div className="flex items-center justify-between pb-4">
               <button 
                 onClick={() => setIsMobileExpanded(false)}
-                className="text-xs text-slate-500 font-bold uppercase tracking-wider bg-slate-850 px-3 py-1.5 rounded-lg"
+                className="text-xs text-slate-400 font-bold uppercase tracking-wider bg-slate-800/80 px-3 py-1.5 rounded-lg border border-slate-700/50"
               >
                 Cerrar
               </button>
-              <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">
-                Reproduciendo
+              <span className="text-xs font-bold text-violet-400 uppercase tracking-widest flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping"></span>
+                Reproduciendo en Nebula
               </span>
               <div className="w-12" /> {/* spacing spacer */}
             </div>
 
             {/* Heavy Artwork Display */}
             <div className="flex-1 flex flex-col items-center justify-center py-6">
-              <div className="w-64 h-64 bg-slate-800 rounded-3xl overflow-hidden shadow-2xl border border-slate-850">
+              <div className="w-64 h-64 bg-slate-900 rounded-3xl overflow-hidden shadow-2xl border border-violet-500/20 relative">
                 <img
-                  src={currentTrack.thumbnail || 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=150&h=150&fit=crop'}
+                  src={currentTrack.thumbnail || 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=300&h=300&fit=crop'}
                   alt={currentTrack.title}
                   className="w-full h-full object-cover"
                 />
@@ -309,8 +310,8 @@ export default function AudioPlayer() {
 
               {/* Title & Artist */}
               <div className="text-center mt-6 max-w-sm">
-                <h3 className="font-extrabold text-lg text-slate-100 line-clamp-1">{currentTrack.title}</h3>
-                <p className="text-xs text-slate-500 mt-1 line-clamp-1">
+                <h3 className="font-extrabold text-xl text-white line-clamp-1">{currentTrack.title}</h3>
+                <p className="text-xs text-slate-400 mt-1 line-clamp-1">
                   {currentTrack.artists?.map(a => a.name).join(', ') || 'Artista Desconocido'}
                 </p>
               </div>
@@ -332,7 +333,7 @@ export default function AudioPlayer() {
                   className="w-full slider-seeker cursor-pointer"
                 />
                 <div 
-                  className="absolute left-0 bg-brand-500 h-1 rounded-l-full pointer-events-none" 
+                  className="absolute left-0 bg-gradient-to-r from-brand-500 to-cyan-400 h-1 rounded-l-full pointer-events-none" 
                   style={{ width: `${progressPercent}%` }} 
                 />
               </div>
@@ -343,7 +344,7 @@ export default function AudioPlayer() {
               <div className="flex items-center justify-around w-full max-w-xs">
                 <button
                   onClick={() => setShuffle(!shuffle)}
-                  className={`p-2 rounded-lg ${shuffle ? 'text-brand-500' : 'text-slate-500'}`}
+                  className={`p-2 rounded-lg ${shuffle ? 'text-cyan-400' : 'text-slate-500'}`}
                 >
                   <Shuffle className="w-5 h-5" />
                 </button>
@@ -358,7 +359,7 @@ export default function AudioPlayer() {
                 <button
                   onClick={togglePlay}
                   disabled={loading}
-                  className="p-4 bg-brand-500 text-dark-300 rounded-full shadow-lg shadow-emerald-500/10"
+                  className="p-4 bg-gradient-to-r from-brand-500 to-cyan-500 text-white rounded-full shadow-xl shadow-brand-500/30 glow-nebula"
                 >
                   {loading ? (
                     <Loader2 className="w-6 h-6 animate-spin" />
@@ -378,11 +379,11 @@ export default function AudioPlayer() {
 
                 <button
                   onClick={cycleRepeat}
-                  className={`p-2 rounded-lg relative ${repeat !== 'none' ? 'text-brand-500' : 'text-slate-500'}`}
+                  className={`p-2 rounded-lg relative ${repeat !== 'none' ? 'text-cyan-400' : 'text-slate-500'}`}
                 >
                   <Repeat className="w-5 h-5" />
                   {repeat === 'one' && (
-                    <span className="absolute top-1.5 right-1 text-[8px] bg-brand-500 text-dark-300 px-0.5 rounded font-black leading-none">
+                    <span className="absolute top-1.5 right-1 text-[8px] bg-cyan-400 text-dark-300 px-0.5 rounded font-black leading-none">
                       1
                     </span>
                   )}
@@ -408,7 +409,7 @@ export default function AudioPlayer() {
                     className="w-full slider-seeker cursor-pointer"
                   />
                   <div 
-                    className="absolute left-0 bg-brand-500 h-1 rounded-l-full pointer-events-none" 
+                    className="absolute left-0 bg-gradient-to-r from-brand-500 to-cyan-400 h-1 rounded-l-full pointer-events-none" 
                     style={{ width: `${volume * 100}%` }} 
                   />
                 </div>

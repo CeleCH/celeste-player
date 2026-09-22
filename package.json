@@ -1,7 +1,7 @@
 {
-  "name": "celeste-player",
-  "version": "1.0.0",
-  "description": "Celeste Player - Personal Music Player",
+  "name": "nebula-player",
+  "version": "2.0.0",
+  "description": "Nebula Player - Cosmic Music Player with Spotify Hybrid streaming",
   "private": true,
   "scripts": {
     "install-all": "npm install && npm install --prefix backend && npm install --prefix frontend",

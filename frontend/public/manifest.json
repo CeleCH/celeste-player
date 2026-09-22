@@ -1,6 +1,7 @@
 {
-  "short_name": "Celeste",
-  "name": "Celeste Player",
+  "short_name": "Nebula",
+  "name": "Nebula Player",
+  "description": "Reproductor de música cósmico con integración oficial de Spotify y streaming ilimitado.",
   "icons": [
     {
       "src": "icon-192.png",
@@ -14,8 +15,8 @@
     }
   ],
   "start_url": ".",
-  "background_color": "#090d16",
-  "theme_color": "#10b981",
+  "background_color": "#040711",
+  "theme_color": "#8b5cf6",
   "display": "standalone",
   "orientation": "portrait"
 }

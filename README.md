@@ -1,18 +1,20 @@
-# 🎧 Celeste Player - Personal Cross-Platform Music Player
+# 🌌 Nebula Player - Cosmic Cross-Platform Music Player & Spotify Hybrid
 
-Celeste Player es un reproductor de música personal y local con una interfaz premium y moderna inspirada en Spotify y YouTube Music. Está diseñado con una arquitectura desacoplada utilizando React (Vite) para el frontend, Express.js (Node.js) para el backend, y el motor `yt-dlp` para resolver y reproducir streams multimedia locales autorizados de manera segura.
+Nebula Player es un reproductor de música cósmico, moderno y multiplataforma con estética espacial oscura y efectos de neón. Cuenta con una **arquitectura híbrida** que integra la **API oficial de Spotify** para Tops mundiales, playlists oficiales, búsquedas y metadatos en Ultra-HD, resolviendo el streaming de audio en tiempo real de forma libre para que **tú y tus amigos puedan escuchar música al mismo tiempo sin necesidad de cuentas Premium** individuales y sin límites de concurrencia.
 
 ---
 
 ## 🚀 Características Principales
 
-*   **Buscador Rápido:** Consulta de canciones, álbumes y artistas con autocompletado y debounce (500ms).
-*   **Aparato de Audio Premium:** Controles de reproducción interactivos (reproducir, pausar, siguiente, anterior, aleatorio, repetición y volumen progresivo).
+*   **Integración Oficial de Spotify (Híbrida):** Consulta listas de éxitos (Top 50 Global, Novedades, Virales) y canciones directamente desde Spotify.
+*   **Audio Libre y Simultáneo:** Sin el límite de 1 usuario por cuenta de Spotify. Decenas de amigos pueden escuchar canciones distintas al mismo tiempo.
+*   **Estética Cósmica y Neón:** Interfaz oscura espacial con acentos en violeta cósmico (`#8b5cf6`), cian eléctrico (`#06b6d4`), magenta y efectos de cristal líquido (*glassmorphism*).
+*   **Buscador Inteligente:** Consulta canciones, álbumes y artistas con debounce en tiempo real.
+*   **Aparato de Audio de Alta Fidelidad:** Controles de reproducción interactivos (reproducir, pausar, siguiente, anterior, aleatorio, repetición y volumen progresivo).
 *   **Colecciones Locales (Playlists y Favoritos):** Creación y administración local de listas de reproducción y marcado de favoritos sin requerir bases de datos externas.
-*   **Persistencia Local:** Sincronización transparente con el almacenamiento del navegador utilizando IndexedDB y localStorage.
+*   **Persistencia Local:** Sincronización transparente con IndexedDB y localStorage con migración automática.
 *   **Historial Musical:** Registro cronológico de canciones escuchadas recientemente con prevención de duplicación.
-*   **Diseño Adaptable (Responsive):** Experiencia de escritorio con barra lateral que se transforma dinámicamente en navegación inferior en pantallas táctiles y dispositivos móviles.
-*   **Seguridad:** Ejecución segura de subprocesos externos para evitar vulnerabilidades de inyección de comandos en el servidor.
+*   **Diseño Adaptable (Responsive & PWA):** Experiencia de escritorio y modo mini-reproductor y drawer táctil para celulares.
 
 ---
 
@@ -20,25 +22,24 @@ Celeste Player es un reproductor de música personal y local con una interfaz pr
 
 ### Frontend
 *   **React 18** + **Vite** (Compilador ultrarrápido)
-*   **Tailwind CSS** (Estilos y tokens de diseño oscuros)
+*   **Tailwind CSS** (Tema cósmico oscuro con resplandor neón)
 *   **Zustand** (Manejador de estado global ágil)
 *   **React Router Dom v6** (Navegación e itinerarios)
-*   **Lucide React** (Paquete de iconos consistentes)
+*   **Lucide React** (Iconos modernos y estilizados)
 *   **IndexedDB** (Base de datos local en el navegador)
 
 ### Backend
 *   **Node.js** + **Express.js** (Servidor API REST)
+*   **Spotify Web API** (Metadatos, tops mundiales y playlists oficiales)
+*   **ytmusic-api** + **yt-dlp** (Resolución y streaming de audio)
 *   **Helmet & CORS** (Seguridad y políticas de recursos compartidos)
-*   **Express Rate Limit** (Prevención de abusos a endpoints)
-*   **ytmusic-api** (Consultas y metadatos de YouTube Music)
-*   **yt-dlp** (Resolución segura de streams de audio)
 
 ---
 
 ## 📂 Estructura del Proyecto
 
 ```text
-celeste-player/
+nebula-player/
 │
 ├── frontend/                 # React SPA (Client)
 │   ├── src/
@@ -164,16 +165,32 @@ npm run dev
 
 ---
 
+## 🎵 Configuración de la API Oficial de Spotify (Opcional)
+
+Nebula Player funciona de forma autónoma sin ninguna clave adicional gracias a su catálogo cósmico predeterminado. Sin embargo, para habilitar los Tops Mundiales oficiales de Spotify, búsquedas directas en el catálogo de Spotify y carátulas originales:
+
+1. Ve a [developer.spotify.com/dashboard](https://developer.spotify.com/dashboard) e inicia sesión con tu cuenta de Spotify.
+2. Haz clic en **Create App** (Nombre sugerido: `Nebula Player`, Redirect URI: `http://localhost:3001/callback`).
+3. En la configuración de tu aplicación de Spotify, copia el **Client ID** y el **Client Secret**.
+4. Abre el archivo `backend/.env` y pégalos:
+   ```env
+   SPOTIFY_CLIENT_ID=tu_client_id_aqui
+   SPOTIFY_CLIENT_SECRET=tu_client_secret_aqui
+   ```
+5. Reinicia el backend. ¡La aplicación cargará automáticamente los Tops de Spotify para ti y tus amigos!
+
+---
+
 ## 📱 Instalación en Móviles y Escritorio (PWA)
 
-Celeste Player está configurado como una **PWA (Progressive Web App)**. Esto significa que puedes instalarlo en tu celular o computadora como si fuera una aplicación nativa (APK) sin necesidad de pasar por la Play Store ni compilar código nativo.
+Nebula Player está configurado como una **PWA (Progressive Web App)**. Esto significa que puedes instalarlo en tu celular o computadora como si fuera una aplicación nativa sin necesidad de pasar por tiendas de aplicaciones.
 
 ### Pasos para instalar en Android (Chrome):
 1.  Asegúrate de que tu computadora (donde corre el backend) y tu celular estén conectados a la **misma red Wi-Fi**.
 2.  Busca la dirección IP local de tu computadora (por ejemplo, `192.168.1.15`). Puedes obtenerla en la terminal ejecutando `ipconfig` (Windows) o `ifconfig` (macOS/Linux).
 3.  En el navegador Chrome de tu celular, ingresa a: `http://192.168.1.15:5173`.
 4.  Toca el menú de tres puntos arriba a la derecha en Chrome y selecciona **"Agregar a la pantalla principal"** o **"Instalar aplicación"**.
-5.  ¡Listo! Celeste aparecerá con su propio icono en tu celular y se abrirá en pantalla completa sin barra de navegación del navegador.
+5.  ¡Listo! Nebula aparecerá con su propio icono espacial en tu celular y se abrirá en pantalla completa.
 
 ### Pasos para instalar en iOS (Safari):
 1.  Conecta tu iPhone a la misma red Wi-Fi de tu PC.

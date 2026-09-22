@@ -6,8 +6,6 @@ import {
   getSpotifyPlaylist,
   searchTracks,
   getTrackDetails,
-  getStreamUrl,
-  streamAudio,
   getHistory,
   addHistory,
   clearHistory,
@@ -21,7 +19,7 @@ const router = Router();
 // Health Check
 router.get("/health", healthCheck);
 
-// Spotify Hybrid Endpoints
+// Spotify Endpoints
 router.get("/spotify/status", getSpotifyStatus);
 router.get("/spotify/featured", getSpotifyFeatured);
 router.get("/spotify/playlist/:id", getSpotifyPlaylist);
@@ -29,8 +27,6 @@ router.get("/spotify/playlist/:id", getSpotifyPlaylist);
 // Search & Track Meta
 router.get("/search", searchTracks);
 router.get("/tracks/:id", getTrackDetails);
-router.get("/tracks/:id/play", getStreamUrl);
-router.get("/tracks/:id/stream", streamAudio);
 
 // History (In-memory back-up, client uses IndexedDB as primary source)
 router.get("/history", getHistory);
@@ -43,4 +39,3 @@ router.post("/favorites", addFavorite);
 router.delete("/favorites/:id", deleteFavorite);
 
 export default router;
-

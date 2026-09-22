@@ -2,7 +2,7 @@ const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
 export const musicApi = {
   /**
-   * Search for songs, albums, and artists
+   * Search for songs, albums, and artists via Spotify
    * @param {string} query 
    */
   async search(query) {
@@ -19,7 +19,7 @@ export const musicApi = {
   },
 
   /**
-   * Get metadata details of a specific track
+   * Get metadata details of a specific track from Spotify
    * @param {string} id 
    */
   async getTrackDetails(id) {
@@ -33,39 +33,6 @@ export const musicApi = {
       console.error('API track metadata error:', error);
       throw error;
     }
-  },
-
-  /**
-   * Resolve audio stream URL for a track via backend
-   * @param {string} id 
-   */
-  async getPlaybackStream(id) {
-    try {
-      const response = await fetch(`${BASE_URL}/tracks/${id}/play`);
-      if (!response.ok) {
-        throw new Error('Error al preparar el recurso de audio.');
-      }
-      return await response.json();
-    } catch (error) {
-      console.error('API playback stream error:', error);
-      throw error;
-    }
-  },
-
-  /**
-   * Get the proxied audio stream URL for direct use in <audio> src.
-   * Supports passing a track object or track ID with optional metadata query for Spotify tracks.
-   * @param {string|object} trackOrId
-   * @returns {string} proxy stream URL
-   */
-  getStreamUrl(trackOrId) {
-    if (typeof trackOrId === 'object' && trackOrId !== null) {
-      const id = trackOrId.id;
-      const title = encodeURIComponent(trackOrId.title || '');
-      const artist = encodeURIComponent(trackOrId.artists?.[0]?.name || '');
-      return `${BASE_URL}/tracks/${id}/stream?title=${title}&artist=${artist}`;
-    }
-    return `${BASE_URL}/tracks/${trackOrId}/stream`;
   },
 
   /**
@@ -110,4 +77,3 @@ export const musicApi = {
     }
   }
 };
-

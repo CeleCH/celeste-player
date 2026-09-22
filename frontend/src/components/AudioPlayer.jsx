@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { 
   Play, Pause, SkipForward, SkipBack, Shuffle, Repeat, 
-  Volume2, VolumeX, Loader2, Heart, ListMusic, AlertTriangle 
+  Volume2, VolumeX, Loader2, Heart, ListMusic, AlertTriangle, Music 
 } from 'lucide-react';
 import { useStore, useCurrentTrack } from '../store/store';
-import useAudioPlayer from '../hooks/useAudioPlayer';
+import useSpotifyPlayer from '../hooks/useSpotifyPlayer';
+import { spotifyAuth } from '../services/spotifyAuth';
 
 export default function AudioPlayer() {
   const currentTrack = useCurrentTrack();
@@ -13,16 +14,26 @@ export default function AudioPlayer() {
   const volume = useStore((state) => state.volume);
   const shuffle = useStore((state) => state.shuffle);
   const repeat = useStore((state) => state.repeat);
+  const spotifyUser = useStore((state) => state.spotifyUser);
   
   const setVolume = useStore((state) => state.setVolume);
   const setShuffle = useStore((state) => state.setShuffle);
   const setRepeat = useStore((state) => state.setRepeat);
-  const playNext = useStore((state) => state.playNext);
-  const playPrevious = useStore((state) => state.playPrevious);
   const favorites = useStore((state) => state.favorites);
   const toggleFavorite = useStore((state) => state.toggleFavorite);
 
-  const { currentTime, duration, loading, playbackError, togglePlay, seek } = useAudioPlayer();
+  const { 
+    currentTime, 
+    duration, 
+    loading, 
+    playbackError, 
+    isPlayerReady, 
+    togglePlay, 
+    seek, 
+    next, 
+    previous 
+  } = useSpotifyPlayer();
+
   const [prevVolume, setPrevVolume] = useState(0.8);
   const [isMobileExpanded, setIsMobileExpanded] = useState(false);
 
@@ -63,9 +74,33 @@ export default function AudioPlayer() {
       
       {/* Playback error toast indicator */}
       {playbackError && (
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-full bg-rose-950 border border-rose-500/30 text-rose-350 text-xs px-4 py-2.5 rounded-t-xl flex items-center gap-2 shadow-lg animate-bounce">
-          <AlertTriangle className="w-4 h-4 text-rose-500" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-full bg-rose-950 border border-rose-500/40 text-rose-200 text-xs px-4 py-2.5 rounded-t-xl flex items-center gap-2 shadow-xl z-50">
+          <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
           <span>{playbackError}</span>
+          {!spotifyUser && (
+            <button
+              onClick={() => spotifyAuth.login()}
+              className="ml-2 px-2.5 py-1 bg-emerald-500 text-dark-300 font-bold rounded-lg text-[10px] uppercase hover:bg-emerald-400"
+            >
+              Conectar Spotify
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* Spotify Connect banner if not logged in */}
+      {!spotifyUser && (
+        <div className="bg-gradient-to-r from-emerald-950/80 via-dark-200 to-emerald-950/80 border-b border-emerald-500/20 px-4 py-1.5 flex items-center justify-between text-xs">
+          <div className="flex items-center gap-2 text-emerald-400 font-medium">
+            <Music className="w-3.5 h-3.5 animate-pulse" />
+            <span>Inicia sesión con Spotify Premium para reproducir música oficial en alta fidelidad.</span>
+          </div>
+          <button
+            onClick={() => spotifyAuth.login()}
+            className="px-3 py-1 bg-emerald-500 hover:bg-emerald-400 text-dark-300 font-black rounded-lg text-[11px] uppercase tracking-wider transition-transform hover:scale-105 shrink-0"
+          >
+            Conectar
+          </button>
         </div>
       )}
 
@@ -114,7 +149,7 @@ export default function AudioPlayer() {
             </button>
 
             <button
-              onClick={playPrevious}
+              onClick={previous}
               className="p-1.5 rounded-lg text-slate-400 hover:text-slate-100 transition-colors"
               title="Anterior"
             >
@@ -137,7 +172,7 @@ export default function AudioPlayer() {
             </button>
 
             <button
-              onClick={playNext}
+              onClick={next}
               className="p-1.5 rounded-lg text-slate-400 hover:text-slate-100 transition-colors"
               title="Siguiente"
             >
@@ -272,7 +307,7 @@ export default function AudioPlayer() {
             </button>
 
             <button
-              onClick={playNext}
+              onClick={next}
               className="p-2 text-slate-400 hover:text-slate-100 shrink-0"
             >
               <SkipForward className="w-4 h-4 fill-current" />
@@ -350,7 +385,7 @@ export default function AudioPlayer() {
                 </button>
 
                 <button
-                  onClick={playPrevious}
+                  onClick={previous}
                   className="p-2 text-slate-350"
                 >
                   <SkipBack className="w-6 h-6 fill-current" />
@@ -371,7 +406,7 @@ export default function AudioPlayer() {
                 </button>
 
                 <button
-                  onClick={playNext}
+                  onClick={next}
                   className="p-2 text-slate-350"
                 >
                   <SkipForward className="w-6 h-6 fill-current" />

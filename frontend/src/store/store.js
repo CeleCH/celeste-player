@@ -28,6 +28,19 @@ const saveToLocalStorage = (key, value) => {
 };
 
 export const useStore = create((set, get) => ({
+  // Spotify Auth & SDK State
+  spotifyUser: null,
+  spotifyToken: null,
+  isSpotifyAuthenticated: false,
+  spotifyDeviceId: null,
+
+  setSpotifyUser: (user) => set({ spotifyUser: user, isSpotifyAuthenticated: Boolean(user) }),
+  setSpotifyToken: (token) => set({ spotifyToken: token }),
+  setSpotifyDeviceId: (id) => set({ spotifyDeviceId: id }),
+  logoutSpotify: () => {
+    set({ spotifyUser: null, spotifyToken: null, isSpotifyAuthenticated: false, spotifyDeviceId: null });
+  },
+
   // Playback state
   isPlaying: false,
   volume: 0.8,

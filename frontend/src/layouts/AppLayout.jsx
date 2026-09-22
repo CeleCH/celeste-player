@@ -1,11 +1,14 @@
 import React, { useEffect } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
-import { Home, Search, Library, Heart, ListMusic, History, Settings, Music, Sparkles } from 'lucide-react';
+import { Home, Search, Library, Heart, ListMusic, History, Settings, Music, Sparkles, LogOut } from 'lucide-react';
 import { useStore } from '../store/store';
+import { spotifyAuth } from '../services/spotifyAuth';
 import AudioPlayer from '../components/AudioPlayer';
 
 export default function AppLayout() {
   const initStore = useStore((state) => state.initStore);
+  const spotifyUser = useStore((state) => state.spotifyUser);
+  const logoutSpotify = useStore((state) => state.logoutSpotify);
   const location = useLocation();
 
   useEffect(() => {
@@ -64,12 +67,47 @@ export default function AppLayout() {
             })}
           </nav>
 
-          {/* Sidebar Footer info */}
-          <div className="pt-4 border-t border-slate-800/60 text-center">
-            <span className="text-[10px] text-violet-400/80 font-bold uppercase tracking-widest flex items-center justify-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping"></span>
-              Audio HD Libre & Spotify
-            </span>
+          {/* Spotify Auth Status Card in Sidebar */}
+          <div className="pt-4 border-t border-slate-800/60">
+            {spotifyUser ? (
+              <div className="p-3 rounded-2xl bg-slate-900/70 border border-emerald-500/20 flex items-center justify-between gap-2 shadow-inner">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  {spotifyUser.images?.[0]?.url ? (
+                    <img 
+                      src={spotifyUser.images[0].url} 
+                      alt={spotifyUser.display_name} 
+                      className="w-8 h-8 rounded-full border border-emerald-400/50 object-cover shrink-0" 
+                    />
+                  ) : (
+                    <div className="w-8 h-8 rounded-full bg-emerald-500/20 text-emerald-400 font-bold text-xs flex items-center justify-center shrink-0 border border-emerald-500/30">
+                      {spotifyUser.display_name?.[0]?.toUpperCase() || 'S'}
+                    </div>
+                  )}
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold text-slate-100 truncate">{spotifyUser.display_name}</p>
+                    <span className="text-[10px] text-emerald-400 font-bold uppercase tracking-wider flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                      {spotifyUser.product === 'premium' ? 'Spotify Premium' : 'Spotify Free'}
+                    </span>
+                  </div>
+                </div>
+                <button
+                  onClick={() => { spotifyAuth.logout(); logoutSpotify(); }}
+                  title="Cerrar sesión de Spotify"
+                  className="text-slate-500 hover:text-rose-400 p-1.5 rounded-lg hover:bg-slate-800 transition-colors shrink-0"
+                >
+                  <LogOut className="w-4 h-4" />
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => spotifyAuth.login()}
+                className="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-dark-300 font-black text-xs tracking-wider uppercase transition-all duration-200 flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20 hover:scale-[1.02] active:scale-95"
+              >
+                <Music className="w-4 h-4 stroke-[2.5]" />
+                Conectar Spotify
+              </button>
+            )}
           </div>
         </aside>
 

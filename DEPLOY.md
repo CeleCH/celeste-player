@@ -46,10 +46,20 @@ Render ofrece alojamiento gratuito para aplicaciones en contenedores utilizando 
     *   `FRONTEND_URL` = `https://TU-FRONTEND-DE-VERCEL.vercel.app` *(Paso 3)*
     *   `SPOTIFY_CLIENT_ID` = `TU_SPOTIFY_CLIENT_ID` *(Opcional para Tops y metadatos de Spotify)*
     *   `SPOTIFY_CLIENT_SECRET` = `TU_SPOTIFY_CLIENT_SECRET` *(Opcional para Tops y metadatos de Spotify)*
-6.  Haz clic en **Create Web Service**. El proceso de compilación tomará entre 3 y 5 minutos. Al finalizar, Render te dará una URL pública (ejemplo: `https://nebula-backend.onrender.com`). **Copia esta URL**.
+6.  **🍪 Desbloquear YouTube en la Nube (Secret File `cookies.txt`):**
+    > [!IMPORTANT]
+    > Los servidores en la nube (Render, AWS, etc.) son detectados por YouTube y bloquean las descargas de audio con el error *"Sign in to confirm you're not a bot"*. Para solucionarlo al 100%:
+    *   En tu navegador Chrome/Brave/Edge, instala la extensión gratuita **"Get cookies.txt LOCALLY"**.
+    *   Entra a [YouTube](https://www.youtube.com/) con tu cuenta de Google.
+    *   Abre la extensión y presiona **"Export"** para descargar el archivo `cookies.txt`.
+    *   En Render, ve a la pestaña **Environment** -> sección **Secret Files** -> **Add Secret File**:
+        *   **Filename:** `cookies.txt`
+        *   **Contents:** Abre el archivo `cookies.txt` descargado, copia todo el texto y pégalo ahí.
+    *   Haz clic en **Save Changes**.
+7.  Haz clic en **Create Web Service** (o guarda los cambios). El proceso de compilación tomará entre 3 y 5 minutos. Al finalizar, Render te dará una URL pública (ejemplo: `https://nebula-backend.onrender.com`). **Copia esta URL**.
 
 > [!NOTE]
-> Los servicios gratuitos de Render entran en "modo de suspensión" después de 15 minutos sin recibir visitas. La primera carga del reproductor tras un tiempo inactivo puede demorar unos 30-50 segundos mientras el servidor vuelve a despertar.
+> Los servicios gratuitos de Render entran en "modo de suspensión" después de 15 minutos sin recibir visitas. La primera carga del reproductor tras un tiempo inactivo puede demorar unos 30-50 segundos mientras el servidor vuelve a despertar. Puedes verificar si tus cookies están activas abriendo `https://TU-BACKEND.onrender.com/api/health` (debe mostrar `"cookiesConfigured": true`).
 
 ---
 

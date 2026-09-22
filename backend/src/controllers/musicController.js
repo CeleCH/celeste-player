@@ -62,6 +62,7 @@ export const healthCheck = async (req, res) => {
       status: "ok",
       app: "Nebula Player API",
       spotifyConfigured: spotifyService.isConfigured(),
+      cookiesConfigured: ytDlpService.hasCookies(),
       ytdlp: ytdlpVersion || null
     });
   } catch (error) {

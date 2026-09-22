@@ -42,6 +42,48 @@ export const ytDlpService = {
     });
   },
 
+  getCookiesPath() {
+    const renderCookiesPath = '/etc/secrets/cookies.txt';
+    const localCookiesPath = path.resolve(process.cwd(), 'cookies.txt');
+    const tempCookiesPath = '/tmp/cookies.txt';
+
+    if (process.env.YOUTUBE_COOKIES && process.env.YOUTUBE_COOKIES.trim().length > 0) {
+      try {
+        const raw = process.env.YOUTUBE_COOKIES.trim();
+        const content = raw.startsWith('base64:')
+          ? Buffer.from(raw.slice(7), 'base64').toString('utf-8')
+          : raw;
+        fs.writeFileSync(tempCookiesPath, content, 'utf-8');
+        return tempCookiesPath;
+      } catch (e) {
+        console.error('Failed to write YOUTUBE_COOKIES env to temp:', e.message);
+      }
+    }
+
+    if (fs.existsSync(renderCookiesPath) && fs.statSync(renderCookiesPath).size > 0) {
+      try {
+        fs.copyFileSync(renderCookiesPath, tempCookiesPath);
+        return tempCookiesPath;
+      } catch (copyErr) {
+        return renderCookiesPath;
+      }
+    }
+
+    if (fs.existsSync(localCookiesPath) && fs.statSync(localCookiesPath).size > 0) {
+      return localCookiesPath;
+    }
+
+    if (fs.existsSync(tempCookiesPath) && fs.statSync(tempCookiesPath).size > 0) {
+      return tempCookiesPath;
+    }
+
+    return null;
+  },
+
+  hasCookies() {
+    return !!this.getCookiesPath();
+  },
+
   async streamAudio(videoId, res) {
     if (!videoId || !VIDEO_ID_REGEX.test(videoId)) {
       return res.status(400).json({ error: 'Identificador de canción inválido.' });
@@ -81,22 +123,7 @@ export const ytDlpService = {
       const outputPath = path.join(CACHE_DIR, `${videoId}.%(ext)s`);
       const videoUrl = `https://music.youtube.com/watch?v=${videoId}`;
 
-      const renderCookiesPath = '/etc/secrets/cookies.txt';
-      const localCookiesPath = path.resolve(process.cwd(), 'cookies.txt');
-      const tempCookiesPath = '/tmp/cookies.txt';
-      
-      let cookiesPath = null;
-      if (fs.existsSync(renderCookiesPath) && fs.statSync(renderCookiesPath).size > 0) {
-        try {
-          fs.copyFileSync(renderCookiesPath, tempCookiesPath);
-          cookiesPath = tempCookiesPath;
-        } catch (copyErr) {
-          console.error('Failed to copy cookies to temp path:', copyErr.message);
-          cookiesPath = renderCookiesPath;
-        }
-      } else if (fs.existsSync(localCookiesPath) && fs.statSync(localCookiesPath).size > 0) {
-        cookiesPath = localCookiesPath;
-      }
+      const cookiesPath = this.getCookiesPath();
 
       // Build primary arguments
       const args = [

@@ -134,8 +134,11 @@ export default function useAudioPlayer() {
         if (aborted || loadingTrackIdRef.current !== currentTrack.id) {
           return;
         }
-        console.error('Error loading track:', err);
-        setPlaybackError(err.message || 'No se pudo reproducir esta canción. Intenta nuevamente.');
+        let displayError = err.message || 'No se pudo reproducir esta canción. Intenta nuevamente.';
+        if (displayError.includes('Failed to fetch')) {
+          displayError = 'El servidor tardó demasiado o fue bloqueado por YouTube. Configura cookies.txt en Render.';
+        }
+        setPlaybackError(displayError);
         setIsPlaying(false);
         setLoading(false);
         lastLoadedTrackIdRef.current = null;
